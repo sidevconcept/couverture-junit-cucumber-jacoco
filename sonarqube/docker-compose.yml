@@ -1,0 +1,28 @@
+# SonarQube Community, local, pour la démo de conférence.
+# Aucun compte SonarCloud requis : tout tourne en local, sans dépendance réseau
+# pendant le talk (une fois l'image récupérée).
+#
+# Usage :
+#   docker compose -f sonarqube/docker-compose.yml up -d
+#   # attendre que http://localhost:9000 réponde (identifiants par défaut admin/admin,
+#   # mot de passe à changer au premier login)
+#   docker compose -f sonarqube/docker-compose.yml down        # arrêt
+#   docker compose -f sonarqube/docker-compose.yml down -v     # arrêt + purge des données
+
+services:
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube-couverture-code
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

@@ -102,3 +102,63 @@ de conférence pour illustrer la complémentarité des deux types de test.
 - `presentation/couverture-code-conference.pptx` : la slide Jacoco montre
   désormais deux barres (JUnit en or, Cucumber en bleu-teal) par classe, sur
   les mêmes données réelles.
+
+---
+
+## 2026-09-09 — Intégration SonarQube
+
+**Prompts (verbatim, deux messages)** :
+
+> est ce qu'il y a une integration possible dans un soar pour ces données de
+> sortie jacoco
+
+Réponse : clarification que SOAR (orchestration d'incidents de sécurité)
+n'a pas de connecteur natif pour de la donnée de couverture — proposition de
+SonarQube/DefectDojo comme pistes plus pertinentes, et question de
+clarification sur l'intention.
+
+> je voulais dire SONAR, pour la couverture
+
+**Décision** : ajouter `sonar-maven-plugin` au `pom.xml` (sans exécution
+liée au lifecycle) configuré pour importer directement les deux rapports
+Jacoco XML (`jacoco-report-junit/jacoco.xml` et
+`jacoco-report-cucumber/jacoco.xml`) — Sonar recalcule lui-même l'union,
+pas besoin de lui donner le rapport déjà fusionné.
+
+**Travail réalisé et validé de bout en bout (Docker disponible en local)** :
+- `pom.xml` : plugin `sonar-maven-plugin` (5.8.0.7211) + propriétés
+  `sonar.projectKey`, `sonar.coverage.jacoco.xmlReportPaths`,
+  `sonar.junit.reportPaths`.
+- `sonarqube/docker-compose.yml` : SonarQube Community local pour la démo
+  (pas de compte SonarCloud requis).
+- Validation réelle : conteneur lancé, jeton généré via l'API, analyse
+  exécutée (`./mvnw test sonar:sonar -Dsonar.token=...`) — succès, 77,7 % de
+  couverture globale remontée dans Sonar, cohérent avec le rapport
+  `jacoco-report` fusionné. Conteneur arrêté après validation
+  (`docker compose down`, volumes conservés).
+- `CLAUDE.md` et `DESCRIPTION.md` mis à jour (section SonarQube, diagramme
+  Mermaid du flux, avertissement à ne jamais committer un jeton Sonar).
+
+**Prompt de suivi (verbatim) :**
+
+> comment je valide sur sonar ?
+
+Réponse : parcours pas-à-pas (démarrer le conteneur, générer un jeton,
+lancer `sonar:sonar`, où regarder dans le dashboard — Overview, Measures →
+Coverage, vue ligne-par-ligne d'une classe — puis arrêter proprement).
+
+**Prompt de suivi (verbatim) :**
+
+> mets a jour la documentation, les md et powerpoint
+
+**Travail réalisé :**
+- `DESCRIPTION.md` : ajout du mode d'emploi complet de validation SonarQube
+  (commandes + où regarder dans le dashboard) et mise à jour de la liste des
+  fichiers associés (`sonarqube/docker-compose.yml`, pptx passé à 11 slides).
+- `CLAUDE.md` : ajout de la même procédure de validation, et rappel de
+  repartir d'une instance Sonar propre (`down -v`) avant la vraie
+  conférence.
+- `presentation/couverture-code-conference.pptx` : nouvelle slide 9 « Bonus
+  — Et dans un vrai dashboard ? » (chiffres réels mesurés : 77,7 % global /
+  82 % lignes / 65 % branches, commandes docker compose + sonar:sonar) ;
+  « À retenir » et « Merci » décalées en 10 et 11.

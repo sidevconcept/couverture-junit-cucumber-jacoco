@@ -209,6 +209,51 @@ Ces écarts ne sont pas fabriqués : ce sont les résultats obtenus après avoir
 C'est exactement le point de la conférence — le rapport de couverture révèle
 des trous qu'une suite de tests « verte » ne montre pas.
 
+## Bonus : voir la couverture dans SonarQube
+
+Au-delà du terminal et du HTML brut, les deux rapports Jacoco XML
+(`jacoco-report-junit/jacoco.xml` et `jacoco-report-cucumber/jacoco.xml`)
+peuvent être importés tels quels dans SonarQube — pas besoin de lui donner
+la version déjà fusionnée, Sonar recalcule l'union lui-même :
+
+```mermaid
+flowchart LR
+    RJ["jacoco-report-junit/jacoco.xml"] --> S["sonar-maven-plugin\n./mvnw test sonar:sonar"]
+    RC["jacoco-report-cucumber/jacoco.xml"] --> S
+    S --> D["Dashboard SonarQube\ncouverture + code smells + security hotspots"]
+
+    classDef step fill:#EAE6DA,color:#16283E,stroke:none;
+    class RJ,RC,S,D step;
+```
+
+Un `docker-compose.yml` (`sonarqube/`) permet de lancer un SonarQube
+Community local pour la démo, sans compte SonarCloud ni dépendance réseau
+pendant le talk. Validé en local : 77,7 % de couverture globale remontée
+dans Sonar, cohérent avec le rapport `jacoco-report` fusionné.
+
+**Comment valider soi-même :**
+
+```bash
+docker compose -f sonarqube/docker-compose.yml up -d        # démarre Sonar (~1-2 min)
+curl -s http://localhost:9000/api/system/status              # attendre "status":"UP"
+
+# générer un jeton (ou via l'UI : My Account → Security → Generate Token)
+curl -u admin:admin -X POST "http://localhost:9000/api/user_tokens/generate" -d "name=demo-conf"
+
+./mvnw test sonar:sonar -Dsonar.token=<le_jeton>              # lance l'analyse
+open http://localhost:9000/dashboard?id=couverture-code       # ouvre le dashboard
+
+docker compose -f sonarqube/docker-compose.yml down           # arrêt (garde les données)
+docker compose -f sonarqube/docker-compose.yml down -v        # ou repart de zéro
+```
+
+Dans le dashboard : **Overview** donne le % de couverture global en un coup
+d'œil, **Measures → Coverage** liste la couverture par classe, et cliquer sur
+une classe (ex. `RecurrenceService`) affiche le code source avec les lignes
+couvertes en vert / non couvertes en rouge — utile en direct pendant le
+talk. Identifiants par défaut `admin` / `admin` (changement de mot de passe
+imposé au premier login via l'UI). Ne jamais committer un jeton Sonar.
+
 ## Comment lancer la démo
 
 ```bash
@@ -226,4 +271,6 @@ open target/jacoco-report/index.html          # vue globale (union des deux)
 - [`PROMPT.md`](./PROMPT.md) — journal des prompts utilisés pour construire
   ce projet.
 - [`presentation/couverture-code-conference.pptx`](./presentation/couverture-code-conference.pptx) —
-  support de la conférence (10 slides, palette bleu marine / tons doux).
+  support de la conférence (11 slides, palette bleu marine / tons doux).
+- [`sonarqube/docker-compose.yml`](./sonarqube/docker-compose.yml) —
+  SonarQube Community local pour la démo bonus.
