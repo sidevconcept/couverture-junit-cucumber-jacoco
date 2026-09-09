@@ -85,16 +85,76 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
+            <!--
+                Surefire est decoupe en deux executions distinctes (JUnit vs Cucumber) plutot
+                que d'utiliser l'execution par defaut, pour que chacune s'attache a son propre
+                fichier de couverture Jacoco (voir plugin jacoco-maven-plugin plus bas). C'est
+                ce qui permet de "scinder" le rapport de couverture par type de test.
+            -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine}</argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
+                <executions>
+                    <!-- Desactive l'execution par defaut : remplacee par les deux ci-dessous. -->
+                    <execution>
+                        <id>default-test</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>tests-unitaires-junit</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>@{jacoco.argLine.junit}</argLine>
+                            <excludes>
+                                <exclude>**/cucumber/**</exclude>
+                            </excludes>
+                            <systemPropertyVariables>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <maven.home>${maven.home}</maven.home>
+                                <!--
+                                    L'extension quarkus-jacoco instrumente elle-meme, separement de
+                                    jacoco-maven-plugin, le code qui tourne dans le QuarkusClassLoader
+                                    (ex: un bean CDI appele depuis un @QuarkusTest). Sans ceci, ce code
+                                    finirait dans target/jacoco-quarkus.exec (chemin par defaut de
+                                    Quarkus, partage entre TOUTES les executions) au lieu du fichier
+                                    dedie a cette execution -> on force un chemin par type de test.
+                                -->
+                                <quarkus.jacoco.data-file>${project.build.directory}/jacoco-junit-quarkus.exec</quarkus.jacoco.data-file>
+                                <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
+                                <quarkus.jacoco.report>false</quarkus.jacoco.report>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>tests-integration-cucumber</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>@{jacoco.argLine.cucumber}</argLine>
+                            <includes>
+                                <include>**/cucumber/**</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <maven.home>${maven.home}</maven.home>
+                                <quarkus.jacoco.data-file>${project.build.directory}/jacoco-cucumber-quarkus.exec</quarkus.jacoco.data-file>
+                                <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
+                                <quarkus.jacoco.report>false</quarkus.jacoco.report>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -117,10 +177,21 @@
                 </configuration>
             </plugin>
             <!--
-                Jacoco : instrumente les tests JUnit + Cucumber lances par surefire (mvn test)
-                et produit un rapport HTML/XML/CSV recapitulatif de la couverture par classe.
-                Le exclClassLoaders exclut le classloader specifique de Quarkus pour eviter
-                le double comptage / les classes generees au build.
+                Jacoco : deux sources de donnees par execution (JUnit / Cucumber), a fusionner :
+
+                1) L'agent jacoco-maven-plugin (-javaagent) attache par surefire, qui mesure
+                   le code qui tourne HORS du QuarkusClassLoader (ex: ConflictDetectorTest qui
+                   instancie ses classes directement, sans passer par le conteneur CDI).
+                2) L'extension quarkus-jacoco (dependance test du pom), qui mesure separement
+                   le code qui tourne DANS le QuarkusClassLoader (ex: un bean CDI appele depuis
+                   un @QuarkusTest ou un scenario Cucumber) et ecrit dans le fichier pointe par
+                   la propriete systeme quarkus.jacoco.data-file (voir plugin surefire ci-dessus,
+                   un chemin distinct par execution).
+
+                exclClassLoaders exclut precisement le QuarkusClassLoader de la mesure (1) pour
+                eviter tout double comptage avec la mesure (2). Sans la fusion ci-dessous, la
+                quasi-totalite du code applicatif (execute via CDI) resterait invisible dans les
+                rapports par type de test.
             -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -128,34 +199,118 @@
                 <version>${jacoco.version}</version>
                 <executions>
                     <execution>
-                        <id>default-prepare-agent</id>
+                        <id>prepare-agent-junit</id>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                         <configuration>
                             <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
-                            <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
-                            <append>true</append>
+                            <destFile>${project.build.directory}/jacoco-junit.exec</destFile>
+                            <propertyName>jacoco.argLine.junit</propertyName>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>default-prepare-agent-integration</id>
+                        <id>prepare-agent-cucumber</id>
+                        <phase>initialize</phase>
                         <goals>
-                            <goal>prepare-agent-integration</goal>
+                            <goal>prepare-agent</goal>
                         </goals>
                         <configuration>
-                            <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
-                            <append>true</append>
+                            <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+                            <destFile>${project.build.directory}/jacoco-cucumber.exec</destFile>
+                            <propertyName>jacoco.argLine.cucumber</propertyName>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>report</id>
+                        <id>merge-junit</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>jacoco-junit.exec</include>
+                                        <include>jacoco-junit-quarkus.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/jacoco-junit-all.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>merge-cucumber</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>jacoco-cucumber.exec</include>
+                                        <include>jacoco-cucumber-quarkus.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/jacoco-cucumber-all.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>merge-global</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>jacoco-junit.exec</include>
+                                        <include>jacoco-junit-quarkus.exec</include>
+                                        <include>jacoco-cucumber.exec</include>
+                                        <include>jacoco-cucumber-quarkus.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report-junit</id>
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                         <configuration>
-                            <dataFile>${project.build.directory}/jacoco-quarkus.exec</dataFile>
+                            <dataFile>${project.build.directory}/jacoco-junit-all.exec</dataFile>
+                            <outputDirectory>${project.build.directory}/jacoco-report-junit</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report-cucumber</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco-cucumber-all.exec</dataFile>
+                            <outputDirectory>${project.build.directory}/jacoco-report-cucumber</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report-global</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
                             <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
                         </configuration>
                     </execution>

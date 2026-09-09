@@ -30,14 +30,31 @@ couverture de tests.
 
 ## Build & couverture
 
-- `./mvnw test` : lance JUnit + Cucumber puis génère automatiquement le
-  rapport Jacoco (HTML + XML + CSV) dans `target/jacoco-report/`. C'est LA
-  commande de démo — pas besoin de `mvn verify` ni de profil particulier.
-- `./scripts/coverage-summary.sh` : lit `target/jacoco-report/jacoco.csv` et
-  affiche un récapitulatif coloré (rouge / orange / vert) de la couverture
-  par classe directement dans le terminal — pensé pour être montré en direct
-  pendant la conférence, en complément du rapport HTML.
-- `target/jacoco-report/index.html` : le rapport détaillé, ligne par ligne.
+- `./mvnw test` : lance deux exécutions Surefire distinctes — une pour les
+  classes JUnit « pures » (tout sauf `com.sidev.cucumber`), une pour
+  `RunCucumberTest` — et génère automatiquement **trois** rapports Jacoco :
+  - `target/jacoco-report-junit/` — couverture JUnit seule
+  - `target/jacoco-report-cucumber/` — couverture Cucumber seule
+  - `target/jacoco-report/` — vue globale (union des deux)
+
+  C'est LA commande de démo — pas besoin de `mvn verify` ni de profil
+  particulier.
+- `./scripts/coverage-summary.sh` : affiche les trois récapitulatifs colorés
+  (rouge / orange / vert) l'un après l'autre dans le terminal — pensé pour
+  être montré en direct pendant la conférence, en complément des rapports
+  HTML.
+
+**Piège à connaître si on retouche le `pom.xml` autour de Jacoco** :
+l'extension `io.quarkus:quarkus-jacoco` mesure, **séparément** de l'agent
+`-javaagent` du `jacoco-maven-plugin`, tout le code qui s'exécute dans le
+`QuarkusClassLoader` (un bean CDI appelé depuis un `@QuarkusTest` ou un
+scénario Cucumber). Elle écrit dans le fichier pointé par la propriété
+système `quarkus.jacoco.data-file` (un chemin distinct par exécution
+Surefire, sinon les deux exécutions écrasent le même fichier par défaut).
+Il faut donc fusionner (`jacoco:merge`) les deux `.exec` — celui de l'agent
+et celui de l'extension — avant de générer chaque rapport (`jacoco:report`).
+Voir le détail dans `DESCRIPTION.md` (diagramme du flux de build) et les
+commentaires du `pom.xml`.
 
 Ne pas ajouter de règle `jacoco:check` qui ferait échouer le build sur un
 seuil de couverture : le but de ce projet est de **montrer** les trous de
