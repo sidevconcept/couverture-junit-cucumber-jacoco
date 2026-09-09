@@ -60,3 +60,45 @@ logique métier à mettre en évidence dans le rapport Jacoco.
 - Documentation : `CLAUDE.md`, `PROMPT.md` (ce fichier), `DESCRIPTION.md`
   (diagrammes Mermaid), présentation `presentation/couverture-code-conference.pptx`
   (palette bleu marine / tons doux, généré via `python-pptx`).
+
+---
+
+## 2026-09-09 — Scinder la couverture par type de test
+
+**Prompt (verbatim) :**
+
+> ce qui serait genial dans le rapport est de cinder la couverture par le
+> test unitaire (Junit) et les tests par cucumber qui sont plus tests
+> integrations. est ce que c'est possible ?
+
+**Décision** : oui — refonte du `pom.xml` pour que `./mvnw test` produise
+trois rapports Jacoco au lieu d'un seul : `jacoco-report-junit/`,
+`jacoco-report-cucumber/`, `jacoco-report/` (global).
+
+**Difficulté rencontrée et corrigée** : un premier découpage naïf (deux
+exécutions Surefire, deux agents `-javaagent` Jacoco) donnait des rapports
+incohérents — la plupart des classes remontaient à 0 % dans les deux vues.
+Cause : l'extension `io.quarkus:quarkus-jacoco` mesure séparément, dans son
+propre fichier `.exec`, tout le code qui s'exécute dans le
+`QuarkusClassLoader` (CDI, REST) — indépendamment de l'agent du
+`jacoco-maven-plugin`. Il fallait pointer `quarkus.jacoco.data-file` vers un
+fichier distinct par exécution Surefire, puis fusionner (`jacoco:merge`) les
+deux sources avant de générer chaque rapport. Voir `DESCRIPTION.md` pour le
+diagramme du flux corrigé.
+
+**Résultat obtenu** (mesures réelles, 17 tests) : JUnit et Cucumber couvrent
+des lignes presque disjointes — ex. `CalendarResource` 0 % en JUnit / 58 % en
+Cucumber, `RecurrenceService` 78 % en JUnit / 4 % en Cucumber. Bon matériel
+de conférence pour illustrer la complémentarité des deux types de test.
+
+**Travail réalisé :**
+- `pom.xml` : deux exécutions Surefire (JUnit / Cucumber), chacune avec son
+  propre agent Jacoco + son propre `quarkus.jacoco.data-file` ; exécutions
+  `jacoco:merge` et `jacoco:report` pour produire les trois rapports.
+- `scripts/coverage-summary.sh` : réécrit pour afficher les trois tableaux
+  (JUnit / Cucumber / global) à la suite.
+- `DESCRIPTION.md` : diagramme de flux et tableau de mesures mis à jour pour
+  refléter le découpage par type de test.
+- `presentation/couverture-code-conference.pptx` : la slide Jacoco montre
+  désormais deux barres (JUnit en or, Cucumber en bleu-teal) par classe, sur
+  les mêmes données réelles.
