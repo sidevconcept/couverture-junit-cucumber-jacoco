@@ -18,6 +18,24 @@
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <quarkus-cucumber.version>1.3.0</quarkus-cucumber.version>
         <jacoco.version>0.8.14</jacoco.version>
+        <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
+
+        <!--
+            SonarQube importe directement les rapports Jacoco XML (pas besoin de son propre
+            agent). En lui donnant les DEUX rapports par-type-de-test (junit + cucumber), Sonar
+            recalcule lui-meme la couverture globale par union des deux -> meme resultat que
+            notre rapport "jacoco-report" fusionne, mais visible dans le dashboard Sonar avec
+            les issues de qualite/securite en plus. Cible par defaut : instance locale (voir
+            sonarqube/docker-compose.yml) ; passer -Dsonar.host.url / -Dsonar.token pour une
+            autre instance (SonarQube Server, SonarQube Cloud...).
+        -->
+        <sonar.projectKey>couverture-code</sonar.projectKey>
+        <sonar.projectName>Couverture de code — Quarkus / JUnit / Cucumber / Jacoco</sonar.projectName>
+        <sonar.host.url>http://localhost:9000</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/jacoco-report-junit/jacoco.xml,${project.build.directory}/jacoco-report-cucumber/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
     </properties>
 
     <dependencyManagement>
@@ -77,6 +95,16 @@
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <extensions>true</extensions>
+            </plugin>
+            <!--
+                Pas d'<executions> : ce plugin ne se lance jamais tout seul pendant
+                mvn test/package. On l'invoke explicitement, apres les tests, avec :
+                  ./mvnw test sonar:sonar -Dsonar.token=<ton_token>
+            -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar-maven-plugin.version}</version>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>

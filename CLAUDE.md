@@ -60,6 +60,39 @@ Ne pas ajouter de règle `jacoco:check` qui ferait échouer le build sur un
 seuil de couverture : le but de ce projet est de **montrer** les trous de
 couverture, pas de bloquer un build dessus.
 
+## SonarQube (optionnel, pour aller plus loin que le terminal)
+
+Le `pom.xml` embarque `sonar-maven-plugin` (aucune `<execution>` liée au
+lifecycle — il ne se déclenche jamais tout seul). SonarQube importe
+directement les deux rapports Jacoco XML (`sonar.coverage.jacoco.xmlReportPaths`
+pointe vers `jacoco-report-junit/jacoco.xml` **et**
+`jacoco-report-cucumber/jacoco.xml`) et recalcule lui-même la couverture
+globale par union des deux — donc pas besoin de lui donner le rapport déjà
+fusionné.
+
+- `docker compose -f sonarqube/docker-compose.yml up -d` : lance un
+  SonarQube Community local (aucun compte SonarCloud requis, pas de
+  dépendance réseau pendant la démo une fois l'image récupérée).
+  `SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true` évite d'avoir à toucher au
+  `vm.max_map_count` de l'hôte.
+- Générer un jeton depuis `http://localhost:9000` (identifiants par défaut
+  `admin` / `admin`, changement de mot de passe imposé au premier login) ou
+  via l'API : `curl -u admin:admin -X POST "http://localhost:9000/api/user_tokens/generate" -d "name=demo"`.
+- Lancer l'analyse : `./mvnw test sonar:sonar -Dsonar.token=<le_jeton>`.
+- Valider : `http://localhost:9000/dashboard?id=couverture-code` — onglet
+  **Overview** pour le % global, **Measures → Coverage** pour le détail par
+  classe, cliquer une classe pour voir les lignes couvertes/non couvertes en
+  surbrillance dans le code source.
+- **Ne jamais committer un jeton Sonar** dans le pom ou un fichier versionné
+  — toujours le passer en `-D` ou variable d'environnement (`SONAR_TOKEN`).
+- Avant la vraie conférence, repartir d'une instance propre avec
+  `docker compose -f sonarqube/docker-compose.yml down -v` puis relancer
+  `up -d`, pour ne pas montrer l'historique d'analyses de cette session.
+
+Validé de bout en bout dans cette session : couverture globale mesurée par
+Sonar = 77,7 % (82 % en lignes, 65 % en branches), cohérent avec les chiffres
+du rapport `jacoco-report` global.
+
 ## Convention : les classes volontairement sous-testées
 
 Certaines classes/méthodes sont **intentionnellement** moins couvertes que
@@ -84,10 +117,11 @@ Quatre livrables doivent rester à jour au fur et à mesure des évolutions :
    séquence, flux de build/couverture). À tenir à jour si l'architecture du
    projet de démo change.
 4. **`presentation/couverture-code-conference.pptx`** — le support de
-   présentation pour la conférence, généré via `python-pptx` (script source :
-   voir historique de session ; à régénérer plutôt qu'à éditer les slides à
-   la main si des changements structurels sont nécessaires). Contraintes de
-   design à respecter strictement :
+   présentation pour la conférence (11 slides, dont une slide bonus
+   SonarQube), généré via `python-pptx` (script source : voir historique de
+   session ; à régénérer plutôt qu'à éditer les slides à la main si des
+   changements structurels sont nécessaires). Contraintes de design à
+   respecter strictement :
    - palette **bleu marine** + tons **doux pour les yeux** (fond crème/écru,
      pas de blanc pur ni de noir pur, accents or/terracotta/sauge en petites
      touches) ;
