@@ -216,3 +216,160 @@ téléchargement de navigateur) :
   convention sur le ton comique de `SCRIPT.md` à préserver, rappel que les
   captures se périment et doivent être régénérées avant une relecture
   sérieuse).
+
+---
+
+## 2026-09-10 — Restructuration multi-module + module Vidocq
+
+**Prompt (verbatim) :**
+
+> je voudrais essayer de faire une version au lieu de quarkus mettre une
+> version avec Vidocq (https://doc.vidocq.dev/vidocq/0.3.0/getting-started).
+> pouvons nous mettre la version Quarkus dans un module et créér un module
+> pour Vidocq
+
+**Recherche menée sur Vidocq** (la doc officielle bloque le fetch direct —
+403 sur `doc.vidocq.dev` et `vidocq.dev` — contournée via le miroir Forgejo
+public du projet, `codefloe.com/Vidocq/vidocq`, et Maven Central directement
+en `curl`) :
+- Vidocq est réel : runtime Jakarta EE Core Profile + MicroProfile,
+  « souverain européen », zéro réflexion, **JPMS strict** (nécessite un
+  `module-info.java`), Java 25 requis. Dernière version stable publiée sur
+  Maven Central : **0.3.0** (tag `v0.3.0` du dépôt, 2026-08-30).
+- Coordonnées Maven vérifiées (existent réellement sur Central, pas
+  devinées) : `io.vidocq:vidocq-parent:0.3.0`,
+  `io.vidocq.runtime:vidocq-runtime-core:0.3.0`,
+  `io.vidocq.runtime:vidocq-runtime-maven-plugin:0.3.0`,
+  `io.vidocq.runtime.extensions.jakartaee.core:vidocq-runtime-cassini-rest-extension:0.3.0`
+  (+ `-codegen`), `io.vidocq.vauban:vauban-core/vauban-indexer/vauban-junit:0.3.0`,
+  `io.vidocq.chappe:chappe-api/chappe-core:0.3.0`,
+  `io.vidocq.cassini:cassini-api/cassini-core:0.3.0`.
+- Un exemple REST officiel existe et a été lu intégralement au tag `v0.3.0`
+  (`vidocq-runtime-examples/vidocq-runtime-cassini-rest-example`) : `pom.xml`
+  complet + `RestExampleApp.java`, `TodoResource.java`, `module-info.java`.
+- Pour les tests, la propre suite de Vidocq (module
+  `vidocq-runtime-it-cassini-rest`) utilise **Arquillian**
+  (`vidocq-runtime-arquillian` + `arquillian-junit5-container` +
+  `shrinkwrap-api`), pas un équivalent de RestAssured/`@QuarkusTest`. Classe
+  de test réelle lue (`RestExtensionTest.java`) : déploiement d'une
+  `JavaArchive`, `@ArquillianResource URL baseUrl`, appels HTTP bruts via
+  `HttpURLConnection`.
+- **Aucune trace d'intégration Cucumber** trouvée pour Vidocq, nulle part.
+- Le repo `quickstarts` officiel existe mais est vide à ce jour (projet très
+  jeune, en construction active).
+
+**Décision (calibrage avec l'utilisateur)** : face à cette complexité réelle
+(JPMS strict, Arquillian plus lourd que RestAssured, aucune garantie
+empirique de compatibilité Jacoco), deux options ont été proposées — parité
+complète tout de suite, ou une phase 1 minimale (logique métier pure, sans
+framework, pour valider le montage multi-module + Jacoco avant d'introduire
+Vidocq). L'utilisateur a choisi **la phase 1 minimale**.
+
+**Travail réalisé (validé de bout en bout, `./mvnw test` vert sur les deux
+modules) :**
+- `pom.xml` racine transformé en agrégateur pur (`packaging=pom`,
+  `<modules>quarkus-app, vidocq-app</modules>`), sans `<parent>` partagé
+  entre modules (pour ne pas coupler BOM Quarkus et coordonnées Vidocq).
+- `quarkus-app/` : tout le contenu existant déplacé via `git mv` (préserve
+  l'historique), artifactId renommé `couverture-code` → `quarkus-app`.
+- `vidocq-app/` (nouveau) : `ConflictDetector` et `RecurrenceService` portés
+  sans annotation CDI (classes « nues »), tests JUnit identiques à ceux de
+  `quarkus-app` (déjà indépendants du framework), `jacoco-maven-plugin` en
+  configuration simple (un seul agent, pas de split — bon contrepoint
+  pédagogique avec la complexité du module quarkus-app). JUnit Jupiter
+  6.1.3 (dernière version stable vérifiée sur Central). `README.md` détaillant
+  la phase 1 et les phases suivantes prévues (CDI/Vauban, REST/Cassini,
+  tests probablement Arquillian, pas de Cucumber).
+- `scripts/coverage-summary.sh` : chemins mis à jour pour les nouveaux
+  répertoires `quarkus-app/target/` et `vidocq-app/target/site/jacoco/` ;
+  affiche maintenant les deux modules à la suite.
+- `CLAUDE.md` et `DESCRIPTION.md` mis à jour (structure multi-module,
+  commandes `-pl`, section Vidocq phase 1, avertissement sur le statut
+  "chantier en cours" de `vidocq-app`).
+
+---
+
+## 2026-09-10 — Faire tourner Vidocq pour de vrai (phase 2)
+
+**Prompt (verbatim) :**
+
+> je veux pouvoir voir vidocq en action, est ce qu'on peux faire des modules
+> maven pour chaire, quarkus et vidocq
+
+(Les modules existaient déjà depuis la session précédente — compris comme :
+faire tourner un vrai serveur REST Vidocq, pas juste des classes nues.)
+
+**Recherche complémentaire** : lecture du code source réel des dépôts
+séparés `Vidocq/cassini`, `Vidocq/vauban` (groupIds Maven distincts,
+chacun son propre dépôt Forgejo — pas dans `Vidocq/vidocq`), au tag
+`v0.3.0`, via l'API Forgejo (`/git/trees/<sha>?recursive=true` pour lister,
+`/raw/tag/v0.3.0/<path>` pour le contenu). Fichiers clés lus en entier :
+`RestExampleApp.java`, `TodoResource.java`, `module-info.java` (exemple
+officiel), `Vidocq.java`, `CassiniExtension.java`,
+`ChappeMountConfigExtension.java`, `CassiniMountHandlerProvider.java`,
+`VaubanBeanProvider.java`, `GenerateMojo.java` (vauban-maven-plugin),
+`VaubanGenerator.java`.
+
+**Trois problèmes réels rencontrés, dans l'ordre, chacun diagnostiqué en
+lisant le code source du framework (pas de doc à disposition) :**
+
+1. `IllegalAccessException` au tout premier lancement de l'image jlink —
+   `io.vidocq.runtime.core.Vidocq` instancie la classe `@VidocqMain` par
+   réflexion ; sans `exports com.sidev.vidocqapp;`, échec immédiat.
+2. Une fois corrigé : le serveur démarre, mais **toutes** les routes
+   répondent 404, sans la moindre erreur ni log. Cause découverte en lisant
+   `Vidocq.java` : le trampoline `@VidocqMain` (utilisé) est documenté pour
+   l'usage IDE/dev-mode — il crée un « layer » applicatif dynamique qui
+   accorde un accès réflexif large. Pour une distribution packagée
+   (jlink), la javadoc recommande un point d'entrée différent
+   (`java -m io.vidocq.runtime.core/io.vidocq.runtime.core.Vidocq`, sans
+   layer). Changé le `mainClass` du jlink en conséquence — toujours 404.
+3. En lisant `VaubanBeanProvider.getResourceClasses()` :
+   `bm.getBeans(Object.class, ANY)` — dépend entièrement du `BeanManager`
+   Vauban, qui ne connaissait aucun bean. Cause : `vauban-maven-plugin`
+   (goal `generate`, **distinct** de `vidocq-runtime-maven-plugin` déjà en
+   place) n'était pas déclaré dans le `pom.xml` — sans lui, aucun
+   `META-INF/vauban-beans.list` n'est généré pour les classes du module.
+   Ajouté → **7 beans CDI découverts**, mais nouvel échec : `jlink`/`jdeps`
+   rc=2, "split package" sur `jakarta.ws.rs.core`. Cause : le plugin scanne
+   *toutes* les dépendances résolues (y compris `jakarta.ws.rs-api`) et
+   génère par erreur un client-proxy pour `jakarta.ws.rs.core.Application`
+   (la classe de la spec elle-même) dans son propre package, à l'intérieur
+   de notre module → collision avec le module `jakarta.ws.rs`. Contourné
+   avec une exécution `maven-antrun-plugin` qui supprime le proxy en trop
+   et sa mention dans les fichiers d'index juste après le scan Vauban.
+
+**Résultat validé en direct** (serveur lancé, vrais appels `curl`) :
+`POST /api/calendrier/evenements` → `201 Created` avec le JSON attendu,
+conflit d'horaire → `409 Conflict` avec le même message que `quarkus-app`,
+jour férié (25 décembre) → `holidayGreeting` avec l'emoji. Tests JUnit +
+Jacoco toujours verts (26 classes analysées, proxies CDI inclus).
+
+**Travail réalisé :**
+- `vidocq-app/pom.xml` : dépendances Vidocq réelles (`vidocq-runtime-core`,
+  `vidocq-runtime-cassini-rest-extension` (+ `-codegen`), `chappe-api`,
+  `chappe-core`, `vauban-indexer`, `jakarta.ws.rs-api` 4.0.0,
+  `jakarta.json.bind-api` 3.0.1, `yasson` 3.0.4 + `parsson` 1.1.7 en
+  runtime) ; plugins `vauban-maven-plugin` (generate), `maven-antrun-plugin`
+  (contournement split-package, commenté en détail), `vidocq-runtime-maven-plugin`
+  (generate + jlink, `mainClass=io.vidocq.runtime.core.Vidocq`).
+- `module-info.java` : `requires` complets (jakarta.cdi, jakarta.ws.rs,
+  jakarta.json.bind, io.vidocq.runtime.core/spi, cassini, chappe, vauban),
+  `exports com.sidev.agenda.model` + `resource.dto` (JSON-B), `exports
+  com.sidev.vidocqapp` (réflexion runtime), `provides` explicites pour
+  `ResourceAdapter`/`RouteProvider`, `opens resource`/`service` (CDI).
+- Domaine : `ConflictDetector`/`RecurrenceService` re-deviennent des beans
+  CDI (`@ApplicationScoped`) ; `EventService`, `HolidayService`,
+  `QuoteOfTheDayService`, `EventConflictException` portés à l'identique
+  depuis `quarkus-app` (mêmes annotations CDI standard).
+- `CalendarResource` (nouveau) : même API que `quarkus-app`, conflit
+  intercepté par `try/catch` → 409 plutôt que par un `ExceptionMapper`
+  (pas vérifié si Cassini découvre les providers `@Provider`
+  automatiquement). DTOs avec `@JsonbCreator`/`@JsonbProperty` pour les
+  records en entrée (nécessaire pour Yasson en mode module strict — même
+  motif que `Todo` dans l'exemple officiel).
+- `AgendaApp` (`@VidocqMain`) + `vidocq.properties` (port **8081**, pas
+  8080, pour tourner en même temps que `quarkus-app`).
+- `vidocq-app/README.md`, `CLAUDE.md`, `DESCRIPTION.md` mis à jour avec les
+  trois pièges ci-dessus, en détail, pour ne pas avoir à refaire cette
+  recherche si le module est retouché plus tard.

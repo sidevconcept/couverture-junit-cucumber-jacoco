@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.sidev</groupId>
+    <artifactId>vidocq-app</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <!--
+        Phase 2 : le meme agenda que quarkus-app, cette fois pour de vrai sur
+        Vidocq (Vauban pour le CDI, Cassini pour REST, sur Chappe). Coordonnees
+        et conventions verifiees contre l'exemple officiel vidocq-runtime-
+        cassini-rest-example au tag v0.3.0 (voir PROMPT.md). JPMS strict :
+        voir src/main/java/module-info.java.
+    -->
+
+    <properties>
+        <maven.compiler.release>25</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <vidocq.version>0.3.0</vidocq.version>
+        <junit.version>6.1.3</junit.version>
+        <surefire-plugin.version>3.5.6</surefire-plugin.version>
+        <jacoco.version>0.8.14</jacoco.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.vidocq.runtime</groupId>
+            <artifactId>vidocq-runtime-core</artifactId>
+            <version>${vidocq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vidocq.runtime.extensions.jakartaee.core</groupId>
+            <artifactId>vidocq-runtime-cassini-rest-extension</artifactId>
+            <version>${vidocq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vidocq.chappe</groupId>
+            <artifactId>chappe-api</artifactId>
+            <version>${vidocq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vidocq.chappe</groupId>
+            <artifactId>chappe-core</artifactId>
+            <version>${vidocq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vidocq.vauban</groupId>
+            <artifactId>vauban-indexer</artifactId>
+            <version>${vidocq.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.json.bind</groupId>
+            <artifactId>jakarta.json.bind-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <!-- Yasson + Parsson en runtime pour la serialisation JSON-B. -->
+        <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>yasson</artifactId>
+            <version>3.0.4</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.parsson</groupId>
+            <artifactId>parsson</artifactId>
+            <version>1.1.7</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                    <annotationProcessorPaths combine.children="append">
+                        <path>
+                            <groupId>io.vidocq.runtime.extensions.jakartaee.core</groupId>
+                            <artifactId>vidocq-runtime-cassini-rest-extension-codegen</artifactId>
+                            <version>${vidocq.version}</version>
+                            <type>pom</type>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <argLine>@{argLine}</argLine>
+                </configuration>
+            </plugin>
+            <!--
+                Scanne les classes du module pour les beans CDI et ecrit
+                META-INF/vauban-beans.list. Sans ce plugin (distinct de
+                vidocq-runtime-maven-plugin ci-dessous !), le conteneur Vauban ne
+                connait aucun bean au demarrage en lancement "runtime-first" (celui
+                de l'image jlink) : VaubanBeanProvider#getResourceClasses() renvoie
+                un ensemble vide et TOUTES les routes REST repondent 404, sans la
+                moindre exception ni log d'erreur. Le mecanisme de "layer" du
+                lancement @VidocqMain (IDE / dev-mode) s'en passe car il fait sa
+                propre decouverte dynamique — d'ou un exemple qui "marche" en dev
+                et pas une fois jlink'e sans ce plugin.
+            -->
+            <plugin>
+                <groupId>io.vidocq.vauban</groupId>
+                <artifactId>vauban-maven-plugin</artifactId>
+                <version>${vidocq.version}</version>
+                <executions>
+                    <execution>
+                        <id>vauban-generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                Contournement d'un accroc de jeunesse de vauban-maven-plugin 0.3.0 :
+                GenerateMojo scanne TOUTES les dependances resolues (y compris les jars
+                d'API comme jakarta.ws.rs-api) a la recherche de beans CDI, et genere un
+                client-proxy pour jakarta.ws.rs.core.Application (la classe abstraite de
+                la SPEC elle-meme, pas une sous-classe a nous — on n'en ecrit pas, on
+                utilise le mount declaratif vidocq.http.mount.*). Le proxy est ecrit dans
+                le MEME package que l'original (jakarta.ws.rs.core) a l'interieur de NOTRE
+                module -> conflit de "split package" avec le module jakarta.ws.rs, qui fait
+                echouer jlink (jdeps rc=2). Rien dans notre code ne reference cette classe :
+                on supprime le proxy genere et sa mention dans les fichiers de bean-index
+                juste apres le scan, avant compilation/empaquetage.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>strip-jakarta-ws-rs-application-proxy</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <delete dir="${project.build.outputDirectory}/jakarta/ws/rs/core" quiet="true"/>
+                                <replaceregexp file="${project.build.outputDirectory}/META-INF/vauban-beans.list"
+                                               match="^jakarta\.ws\.rs\.core\.Application$" replace="" byline="true"/>
+                                <replaceregexp file="${project.build.outputDirectory}/META-INF/vauban-enhancements.properties"
+                                               match="^jakarta\.ws\.rs\.core\.Application=.*$" replace="" byline="true"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                Le goal `generate` produit les classes necessaires a la compilation
+                (adaptateurs Cassini). Doit tourner avant compile.
+            -->
+            <plugin>
+                <groupId>io.vidocq.runtime</groupId>
+                <artifactId>vidocq-runtime-maven-plugin</artifactId>
+                <version>${vidocq.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                    <!--
+                        jlink assemble une image d'execution autonome (JPMS strict oblige :
+                        pas de simple "java -cp" pour lancer l'app, voir README.md).
+                        `./mvnw -pl vidocq-app package` genere
+                        vidocq-app/target/vidocq-app/bin/vidocq-app (script de lancement).
+                    -->
+                    <execution>
+                        <id>jlink</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jlink</goal>
+                        </goals>
+                        <configuration>
+                            <!--
+                                "Runtime-first launch", recommande par Vidocq pour les
+                                distributions packagees (voir Vidocq.java) : le main est
+                                celui du runtime lui-meme, pas notre classe @VidocqMain
+                                (celle-ci est pour le lancement IDE / dev-mode, qui
+                                s'appuie sur un mecanisme de "layer" different).
+                            -->
+                            <mainModule>io.vidocq.runtime.core</mainModule>
+                            <mainClass>io.vidocq.runtime.core.Vidocq</mainClass>
+                            <launcher>vidocq-app</launcher>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+                Setup Jacoco "classique" (un seul agent, pas de split JUnit/Cucumber,
+                pas de contournement QuarkusClassLoader) : ce module n'a aucun
+                framework qui charge du code dans un classloader separe. Bon point
+                de comparaison en conference avec le pom.xml du module quarkus-app.
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -13,7 +13,8 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET_DIR="${PROJECT_ROOT}/target"
+QUARKUS_TARGET="${PROJECT_ROOT}/quarkus-app/target"
+VIDOCQ_TARGET="${PROJECT_ROOT}/vidocq-app/target"
 
 SEUIL_ROUGE="${1:-50}"
 SEUIL_VERT="${2:-80}"
@@ -77,22 +78,29 @@ print_table() {
     ' "${csv}"
 }
 
-if [[ ! -f "${TARGET_DIR}/jacoco-report/jacoco.csv" ]]; then
-    echo "Pas de rapport Jacoco trouvé dans ${TARGET_DIR}." >&2
+if [[ ! -f "${QUARKUS_TARGET}/jacoco-report/jacoco.csv" ]]; then
+    echo "Pas de rapport Jacoco trouvé dans ${QUARKUS_TARGET}." >&2
     echo "Lance d'abord : ./mvnw test" >&2
     exit 1
 fi
 
 echo "${BOLD}Récap couverture de code — couverture-code${RESET}"
-echo "Trois vues : JUnit seul, Cucumber seul, puis la vue globale (union des deux)."
+echo "quarkus-app : trois vues (JUnit seul, Cucumber seul, globale) — vidocq-app : une vue (JUnit)."
 
-print_table "JUNIT — tests unitaires" "${TARGET_DIR}/jacoco-report-junit/jacoco.csv"
-print_table "CUCUMBER — tests d'intégration (BDD)" "${TARGET_DIR}/jacoco-report-cucumber/jacoco.csv"
-print_table "GLOBAL — JUnit + Cucumber réunis" "${TARGET_DIR}/jacoco-report/jacoco.csv"
+echo ""
+echo "${BOLD}════ quarkus-app ════${RESET}"
+print_table "JUNIT — tests unitaires" "${QUARKUS_TARGET}/jacoco-report-junit/jacoco.csv"
+print_table "CUCUMBER — tests d'intégration (BDD)" "${QUARKUS_TARGET}/jacoco-report-cucumber/jacoco.csv"
+print_table "GLOBAL — JUnit + Cucumber réunis" "${QUARKUS_TARGET}/jacoco-report/jacoco.csv"
+
+echo ""
+echo "${BOLD}════ vidocq-app ════${RESET}"
+print_table "JUNIT — logique métier portée (phase 1, sans framework)" "${VIDOCQ_TARGET}/site/jacoco/jacoco.csv"
 
 echo ""
 echo "Rapports HTML détaillés :"
-echo "  target/jacoco-report-junit/index.html"
-echo "  target/jacoco-report-cucumber/index.html"
-echo "  target/jacoco-report/index.html"
+echo "  quarkus-app/target/jacoco-report-junit/index.html"
+echo "  quarkus-app/target/jacoco-report-cucumber/index.html"
+echo "  quarkus-app/target/jacoco-report/index.html"
+echo "  vidocq-app/target/site/jacoco/index.html"
 echo ""
