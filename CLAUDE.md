@@ -3,17 +3,41 @@
 ## Contexte
 
 Ce dépôt est le support technique d'une conférence sur les tests des applications
-Java. La stack de démonstration est **Quarkus + JUnit + Cucumber + Jacoco**, et
-l'objectif de la conférence est de montrer, lors d'un build, un rapport de
-couverture de code qui met en évidence **quelles classes ont besoin d'être
-mieux couvertes**.
+Java. L'objectif est de montrer, lors d'un build, un rapport de couverture de
+code qui met en évidence **quelles classes ont besoin d'être mieux couvertes** —
+et de comparer comment ça se passe sur deux stacks différentes.
 
 Le projet de démo est un agenda/planificateur d'événements simple (voir
 `DESCRIPTION.md`). Il n'a pas vocation à évoluer en produit réel : sa seule
 raison d'être est de fournir un terrain d'exemple crédible pour parler de
 couverture de tests.
 
-## Stack technique
+## Structure multi-module
+
+Reactor Maven agrégateur (`pom.xml` racine, `packaging=pom`) avec deux
+modules **volontairement indépendants** (pas de `<parent>` partagé, pour ne
+pas coupler leurs cycles de dépendances respectifs) :
+
+- **`quarkus-app/`** — la démo complète : Quarkus + JUnit + Cucumber +
+  Jacoco (rapport scindé JUnit/Cucumber/global) + SonarQube en bonus. C'est
+  le support principal de la conférence, entièrement validé de bout en bout.
+- **`vidocq-app/`** — la même API REST portée pour de vrai sur
+  [Vidocq](https://vidocq.dev/) (runtime Jakarta EE/MicroProfile « souverain
+  européen », JPMS strict, zéro réflexion) : CDI via Vauban, REST via
+  Cassini sur le serveur HTTP Chappe. **Le serveur tourne réellement**
+  (`./mvnw -pl vidocq-app package` puis `./vidocq-app/target/dist/bin/vidocq-app`,
+  port 8081). Pas encore de tests d'intégration REST (Vidocq n'a pas
+  d'équivalent connu à RestAssured — leur propre suite utilise Arquillian)
+  ni de Cucumber (aucune intégration connue). Voir `vidocq-app/README.md`
+  pour l'état d'avancement détaillé et **trois pièges non évidents**
+  rencontrés en le faisant tourner (à relire avant de retoucher son
+  `pom.xml` ou son `module-info.java`).
+
+`./mvnw test` depuis la racine construit et teste **les deux modules**.
+Pour cibler un seul module : `./mvnw -pl quarkus-app test` ou
+`./mvnw -pl vidocq-app test`.
+
+## Module quarkus-app — stack technique
 
 - **Quarkus** (`3.39.2`) — framework applicatif, packaging `quarkus-rest` +
   `quarkus-rest-jackson`.
@@ -22,27 +46,32 @@ couverture de tests.
   `RecurrenceService`).
 - **Cucumber** (`io.quarkiverse.cucumber:quarkus-cucumber`) — tests BDD en
   français, exécutés contre l'API REST via RestAssured. Runner :
-  `src/test/java/com/sidev/cucumber/RunCucumberTest.java`, features dans
-  `src/test/resources/features/`.
+  `quarkus-app/src/test/java/com/sidev/cucumber/RunCucumberTest.java`,
+  features dans `quarkus-app/src/test/resources/features/`.
 - **Jacoco** (`io.quarkus:quarkus-jacoco` + `jacoco-maven-plugin` `0.8.14`,
   requis pour Java 25) — instrumente `mvn test` (JUnit + Cucumber confondus)
-  et produit le rapport dans `target/jacoco-report/`.
+  et produit le rapport dans `quarkus-app/target/jacoco-report/`.
 
 ## Build & couverture
 
-- `./mvnw test` : lance deux exécutions Surefire distinctes — une pour les
-  classes JUnit « pures » (tout sauf `com.sidev.cucumber`), une pour
-  `RunCucumberTest` — et génère automatiquement **trois** rapports Jacoco :
-  - `target/jacoco-report-junit/` — couverture JUnit seule
-  - `target/jacoco-report-cucumber/` — couverture Cucumber seule
-  - `target/jacoco-report/` — vue globale (union des deux)
+- `./mvnw test` (racine) : construit tout le reactor. Dans `quarkus-app`,
+  ça lance deux exécutions Surefire distinctes — une pour les classes JUnit
+  « pures » (tout sauf `com.sidev.cucumber`), une pour `RunCucumberTest` —
+  et génère automatiquement **trois** rapports Jacoco :
+  - `quarkus-app/target/jacoco-report-junit/` — couverture JUnit seule
+  - `quarkus-app/target/jacoco-report-cucumber/` — couverture Cucumber seule
+  - `quarkus-app/target/jacoco-report/` — vue globale (union des deux)
+
+  Dans `vidocq-app`, ça lance un unique rapport classique dans
+  `vidocq-app/target/site/jacoco/` (pas de split, pas de framework à
+  contourner — voir `vidocq-app/README.md`).
 
   C'est LA commande de démo — pas besoin de `mvn verify` ni de profil
   particulier.
-- `./scripts/coverage-summary.sh` : affiche les trois récapitulatifs colorés
-  (rouge / orange / vert) l'un après l'autre dans le terminal — pensé pour
-  être montré en direct pendant la conférence, en complément des rapports
-  HTML.
+- `./scripts/coverage-summary.sh` : affiche les récapitulatifs colorés
+  (rouge / orange / vert) des deux modules l'un après l'autre dans le
+  terminal — pensé pour être montré en direct pendant la conférence, en
+  complément des rapports HTML.
 
 **Piège à connaître si on retouche le `pom.xml` autour de Jacoco** :
 l'extension `io.quarkus:quarkus-jacoco` mesure, **séparément** de l'agent
@@ -62,7 +91,13 @@ couverture, pas de bloquer un build dessus.
 
 ## SonarQube (optionnel, pour aller plus loin que le terminal)
 
-Le `pom.xml` embarque `sonar-maven-plugin` (aucune `<execution>` liée au
+Configuré uniquement sur `quarkus-app` pour l'instant (le `pom.xml` racine
+est un simple agrégateur, `vidocq-app` n'a pas encore été branché). Lancer
+l'analyse **depuis `quarkus-app/`** : `cd quarkus-app && ../mvnw test
+sonar:sonar -Dsonar.token=<le_jeton>` (ou `./mvnw -pl quarkus-app test
+sonar:sonar -Dsonar.token=...` depuis la racine).
+
+Le `pom.xml` de `quarkus-app` embarque `sonar-maven-plugin` (aucune `<execution>` liée au
 lifecycle — il ne se déclenche jamais tout seul). SonarQube importe
 directement les deux rapports Jacoco XML (`sonar.coverage.jacoco.xmlReportPaths`
 pointe vers `jacoco-report-junit/jacoco.xml` **et**
@@ -95,9 +130,9 @@ du rapport `jacoco-report` global.
 
 ## Convention : les classes volontairement sous-testées
 
-Certaines classes/méthodes sont **intentionnellement** moins couvertes que
-les autres, pour servir d'exemple concret pendant la conférence
-(`CalendarResource.createRecurrence`, la branche `MENSUELLE` de
+Dans `quarkus-app`, certaines classes/méthodes sont **intentionnellement**
+moins couvertes que les autres, pour servir d'exemple concret pendant la
+conférence (`CalendarResource.createRecurrence`, la branche `MENSUELLE` de
 `RecurrenceService`, le DTO `RecurrenceRequest`). Ne pas "corriger" ces trous
 de couverture sans consulter l'utilisateur — ils font partie du script de la
 démo. Le détail exact et son origine sont documentés dans `DESCRIPTION.md`.
@@ -153,11 +188,27 @@ sérieuse du support plutôt que de faire confiance à d'anciennes captures.
 ## Style de code
 
 - Domaine dans `com.sidev.agenda` (`model`, `service`, `resource`,
-  `resource.dto`), tests Cucumber dans `com.sidev.cucumber`.
+  `resource.dto`), même arborescence dans les deux modules. Tests Cucumber
+  dans `com.sidev.cucumber` (uniquement dans `quarkus-app`). Point d'entrée
+  Vidocq dans `com.sidev.vidocqapp` (`vidocq-app` uniquement — module JPMS
+  nommé `com.sidev.vidocqapp`, voir `module-info.java`).
 - Code et commentaires en français (contexte de la conférence), noms
   techniques (classes, méthodes) en anglais/français mixte comme déjà en
   place — rester cohérent avec l'existant plutôt que d'introduire une
   nouvelle convention.
-- Pas de base de données : le `EventService` utilise un `ConcurrentHashMap`
-  en mémoire. Ne pas ajouter de persistance sauf demande explicite — ce
-  n'est pas le sujet de la démo.
+- Pas de base de données : `EventService` (les deux modules) utilise un
+  `ConcurrentHashMap` en mémoire. Ne pas ajouter de persistance sauf
+  demande explicite — ce n'est pas le sujet de la démo.
+- **`vidocq-app` reste un chantier partiel** : REST + CDI fonctionnent
+  réellement (validé en lançant le serveur et en appelant l'API), mais il
+  manque encore des tests d'intégration et l'équivalent Cucumber (aucune
+  intégration connue côté Vidocq). Ne pas retoucher son `pom.xml` ou son
+  `module-info.java` sans avoir lu les trois pièges documentés dans
+  `vidocq-app/README.md` — ce ne sont pas des détails cosmétiques, les
+  oublier fait échouer le build ou renvoie des 404 silencieux. Coordonnées
+  Maven et exemples officiels vérifiés listés dans `PROMPT.md` (entrées
+  "Vidocq") — les réutiliser plutôt que de re-deviner des versions, Vidocq
+  n'ayant pas encore de documentation stable facilement indexable (le fetch
+  direct sur `doc.vidocq.dev`/`vidocq.dev` est bloqué ; passer par le miroir
+  Forgejo `codefloe.com/Vidocq/*` en `curl`, ou l'API `repo1.maven.org`
+  directement pour les coordonnées/versions réelles).
