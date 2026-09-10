@@ -104,7 +104,7 @@ démo. Le détail exact et son origine sont documentés dans `DESCRIPTION.md`.
 
 ## Documentation attendue dans ce dépôt
 
-Quatre livrables doivent rester à jour au fur et à mesure des évolutions :
+Cinq livrables doivent rester à jour au fur et à mesure des évolutions :
 
 1. **`CLAUDE.md`** (ce fichier) — les instructions et conventions du projet.
 2. **`PROMPT.md`** — le journal de **tous** les prompts utilisés pour
@@ -116,22 +116,39 @@ Quatre livrables doivent rester à jour au fur et à mesure des évolutions :
    choix techniques) illustrée par des **diagrammes Mermaid** (architecture,
    séquence, flux de build/couverture). À tenir à jour si l'architecture du
    projet de démo change.
-4. **`presentation/couverture-code-conference.pptx`** — le support de
-   présentation pour la conférence (11 slides, dont une slide bonus
-   SonarQube), généré via `python-pptx` (script source : voir historique de
-   session ; à régénérer plutôt qu'à éditer les slides à la main si des
-   changements structurels sont nécessaires). Contraintes de design à
-   respecter strictement :
+4. **`SCRIPT.md`** — le script de présentation à suivre pendant la
+   conférence (minutage, texte à dire, cues pour les démos en direct). Ton
+   volontairement comique (jeux de mots, auto-dérision sur les situations
+   "évidentes" du métier) — c'est un choix délibéré de l'utilisateur, ne pas
+   le "assagir" sans demande explicite. À tenir à jour si l'ordre ou le
+   contenu des slides change (le minutage notamment).
+5. **`presentation/couverture-code-conference.pptx`** — le support de
+   présentation pour la conférence (28 slides pour ~1h, avec captures d'écran
+   réelles du projet — pas des maquettes). Généré via `python-pptx` : le
+   script source et tout ce qui produit les captures d'écran sont versionnés
+   dans `presentation/build/` (voir `presentation/build/README.md` pour la
+   procédure complète de régénération). **Ne jamais éditer le `.pptx`
+   directement** — toujours régénérer via
+   `presentation/build/generate_pptx.py` si un changement structurel est
+   nécessaire, pour que le fichier reste reproductible. Contraintes de
+   design à respecter strictement :
    - palette **bleu marine** + tons **doux pour les yeux** (fond crème/écru,
      pas de blanc pur ni de noir pur, accents or/terracotta/sauge en petites
      touches) ;
    - **pas d'"AI slop"** : pas d'icônes stock génériques, pas de dégradés
      criards, pas de robot/IA en illustration, pas de listes à puces
      génériques — préférer des diagrammes construits à partir de vraies
-     formes géométriques et des données réelles du projet (ex. les
-     pourcentages de couverture mesurés, pas des chiffres inventés) ;
+     formes géométriques, des captures d'écran réelles, et des données
+     réelles du projet (ex. les pourcentages de couverture mesurés, pas des
+     chiffres inventés) ;
    - contenu original et spécifique à ce projet, pas de texte de remplissage
      générique.
+
+Les captures d'écran vivent dans `presentation/screenshots/` (Jacoco,
+SonarQube, un mock de terminal stylé pour `coverage-summary.sh`) et sont
+régénérées via `presentation/build/` — elles se périment vite (les chiffres
+de couverture changent avec le code), les regénérer avant chaque relecture
+sérieuse du support plutôt que de faire confiance à d'anciennes captures.
 
 ## Style de code
 

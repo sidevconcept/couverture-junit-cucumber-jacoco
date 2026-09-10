@@ -162,3 +162,57 @@ Coverage, vue ligne-par-ligne d'une classe — puis arrêter proprement).
   — Et dans un vrai dashboard ? » (chiffres réels mesurés : 77,7 % global /
   82 % lignes / 65 % branches, commandes docker compose + sonar:sonar) ;
   « À retenir » et « Merci » décalées en 10 et 11.
+
+---
+
+## 2026-09-10 — Présentation d'une heure, captures d'écran, script comique
+
+**Prompt (verbatim) :**
+
+> il faut que la presentation dure une heure, pourais tu étoffer la
+> presentation, s'il est possible pour toi de mettre des captures ecrans
+> dans la presentation et m'ecrire une script a suivre, je suis quelqun de
+> comique qui aime bien les jeux de mots et me moques des situations
+> evidentes
+
+**Décision** : passer le pptx de 11 à 28 slides pour couvrir ~1h (avec deux
+blocs de démo live), intégrer de vraies captures d'écran (pas des
+maquettes), et écrire `SCRIPT.md` — un script de présentation complet, ton
+comique/jeux de mots assumé, avec minutage et deux « soupapes » si le timing
+déborde.
+
+**Captures d'écran obtenues** (Chrome headless + Playwright, piloté via
+`channel="chrome"` pour réutiliser le Chrome déjà installé, sans
+téléchargement de navigateur) :
+- Rapport Jacoco : vue d'ensemble + `RecurrenceService.java` avec la branche
+  MENSUELLE en rouge (le « money shot » de la conf).
+- Terminal : mock HTML stylé du vrai texte produit par
+  `coverage-summary.sh` (pas une vraie capture de terminal — plus net,
+  recadrable, mêmes données réelles).
+- SonarQube : dashboard, mesures par fichier, et le même code source en
+  rouge/vert — nécessite Playwright pour gérer la connexion et le
+  changement de mot de passe forcé au premier login d'une instance fraîche
+  (rencontré : token généré sur une instance dont le mot de passe avait déjà
+  été changé lors d'une session précédente → 401 → repartir d'une instance
+  propre avec `down -v`).
+
+**Travail réalisé :**
+- `presentation/build/` (nouveau) : scripts versionnés
+  (`generate_pptx.py`, `sonar_shots.py`, `terminal-mock.html`, `crop.py`) +
+  `README.md` avec la procédure complète de régénération. Auparavant le
+  script pptx n'existait que dans l'historique de session — corrigé.
+- `presentation/screenshots/` (nouveau) : 6 captures réelles, référencées
+  par le pptx.
+- `presentation/couverture-code-conference.pptx` : réécrit, 28 slides —
+  intro/bio/icebreaker/agenda, zoom dédié JUnit et Cucumber (théorie +
+  code), comparatif JUnit vs Cucumber, deux blocs Jacoco avec captures, bloc
+  SonarQube avec captures, slide comique « excuses classiques », slide
+  retour d'expérience (les deux vrais pièges rencontrés pendant ce
+  projet), conclusion étoffée.
+- `SCRIPT.md` (nouveau) : script complet minuté (~74 min de contenu pour un
+  format 1h, avec deux coupes possibles si en retard), texte à dire pour
+  chaque slide, cues pour les deux blocs de démo live.
+- `CLAUDE.md` et `DESCRIPTION.md` mis à jour (5 livrables au lieu de 4,
+  convention sur le ton comique de `SCRIPT.md` à préserver, rappel que les
+  captures se périment et doivent être régénérées avant une relecture
+  sérieuse).
