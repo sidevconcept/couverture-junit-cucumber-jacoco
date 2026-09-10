@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body { margin:0; padding:40px; background:#0B1D36; font-family: -apple-system, sans-serif; }
+  .window { width: 1180px; background:#161B22; border-radius:12px; box-shadow:0 30px 80px rgba(0,0,0,.5); overflow:hidden; }
+  .titlebar { background:#20262E; padding:12px 16px; display:flex; align-items:center; }
+  .dot { width:12px; height:12px; border-radius:50%; margin-right:8px; }
+  .red{background:#FF5F56;} .yellow{background:#FFBD2E;} .green{background:#27C93F;}
+  .title { color:#8b93a1; font-size:13px; margin-left:12px; font-family: Menlo, monospace; }
+  .body { padding:22px 26px 28px; font-family: Menlo, Consolas, monospace; font-size:14.5px; line-height:1.55; color:#E3E8F0; white-space: pre; }
+  .hdr { color:#F4F1E9; font-weight:700; }
+  .sub { color:#8b93a1; margin-bottom:14px; }
+  .section { color:#C79A52; font-weight:700; margin-top:18px; margin-bottom:4px; }
+  .cols { color:#8b93a1; }
+  .rule { color:#39424F; }
+  .red-row{ color:#E08A7D; }
+  .yellow-row{ color:#E8C97A; }
+  .green-row{ color:#8FC08A; }
+  .prompt { color:#5C8C86; }
+</style></head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+    <div class="title">sidney@conf — couverture-code — zsh</div>
+  </div>
+  <div class="body">
+<span class="prompt">➜</span>  couverture-code <span style="color:#8b93a1">git:(main)</span> ./scripts/coverage-summary.sh
+
+<span class="hdr">Récap couverture de code — couverture-code</span>
+<span class="sub">Trois vues : JUnit seul, Cucumber seul, puis la vue globale (union des deux).</span>
+
+<span class="section">GLOBAL — JUnit + Cucumber réunis</span>
+<span class="cols">  CLASSE                                       LIGNES % BRANCHES %   STATUT</span>
+<span class="rule">  ------------------------------------------------------------------------------</span>
+<span class="red-row">  com.sidev.agenda.resource.dto.RecurrenceRequest         0%       100%  A COUVRIR</span>
+<span class="yellow-row">  com.sidev.agenda.resource.CalendarResource        58%        50%    PARTIEL</span>
+<span class="yellow-row">  com.sidev.agenda.model.Event                      67%        50%    PARTIEL</span>
+<span class="yellow-row">  com.sidev.agenda.service.RecurrenceService        78%        86%    PARTIEL</span>
+<span class="green-row">  com.sidev.agenda.service.EventService             88%        50%         OK</span>
+<span class="green-row">  com.sidev.agenda.service.HolidayService           93%       100%         OK</span>
+<span class="green-row">  com.sidev.agenda.service.QuoteOfTheDayService       100%       100%         OK</span>
+<span class="green-row">  com.sidev.agenda.service.ConflictDetector        100%        75%         OK</span>
+<span class="green-row">  com.sidev.agenda.service.RecurrenceFrequency       100%       100%         OK</span>
+<span class="green-row">  com.sidev.agenda.model.EventCategory             100%       100%         OK</span>
+
+<span class="sub">Rapports HTML détaillés :</span>
+<span class="sub">  target/jacoco-report-junit/index.html</span>
+<span class="sub">  target/jacoco-report-cucumber/index.html</span>
+<span class="sub">  target/jacoco-report/index.html</span>
+<span class="prompt">➜</span>  couverture-code <span style="color:#8b93a1">git:(main)</span> <span style="opacity:.5">▊</span>
+  </div>
+</div>
+</body></html>
