@@ -7,7 +7,7 @@ Le pptx et les captures d'écran sont générés par script — ne pas éditer
 
 ```bash
 python3 -m venv .venv
-./.venv/bin/pip install python-pptx Pillow playwright
+./.venv/bin/pip install python-pptx Pillow playwright qrcode
 ```
 
 `playwright` pilote le Google Chrome déjà installé sur la machine
@@ -45,6 +45,14 @@ docker compose -f sonarqube/docker-compose.yml down
 `sonar_shots.py` gère lui-même la connexion (admin/admin) et le changement
 de mot de passe forcé au premier login d'une instance fraîche — sur une
 instance déjà initialisée, changer le mot de passe utilisé dans le script.
+
+```bash
+# 5. QR code de la dernière slide (vers le dépôt GitHub)
+./.venv/bin/python presentation/build/generate_qr.py
+```
+
+Modifier l'URL directement dans `generate_qr.py` si le dépôt change
+d'adresse, puis relancer avant de régénérer le pptx.
 
 ## Régénérer le pptx
 

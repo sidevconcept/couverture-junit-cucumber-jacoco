@@ -760,7 +760,7 @@ textbox(s, Inches(0.9), Inches(1.05), Inches(11), Inches(1.1),
         "Si vous voulez creuser", 30, NAVY_TEXT, bold=True)
 
 links = [
-    ("Le dépôt de ce projet", "github.com/<ton-repo> — code, scripts, CLAUDE.md, PROMPT.md", GOLD),
+    ("Le dépôt de ce projet", "github.com/sidevconcept/couverture-junit-cucumber-jacoco", GOLD),
     ("Guide Quarkus + Jacoco", "quarkus.io/guides/tests-with-coverage", TEAL),
     ("Extension Cucumber pour Quarkus", "docs.quarkiverse.io/quarkus-cucumber", SAGE),
     ("SonarQube Community", "docs.sonarsource.com", TERRACOTTA),
@@ -777,10 +777,16 @@ footer(s, TOTAL_SLIDES)
 s = blank(prs)
 bg(s, NAVY_DARK)
 dot_grid(s, Inches(0.7), Inches(5.3))
-textbox(s, Inches(0.9), Inches(2.6), Inches(10), Inches(1.4), "Merci.", 52, LIGHT_TEXT, bold=True)
-textbox(s, Inches(0.95), Inches(3.75), Inches(10), Inches(0.7), "Questions ?", 22, GOLD)
-textbox(s, Inches(0.95), Inches(6.55), Inches(10), Inches(0.5),
-        "github.com/<ton-repo>  —  <ton-email>", 13, MUTED)
+textbox(s, Inches(0.9), Inches(2.6), Inches(8.3), Inches(1.4), "Merci.", 52, LIGHT_TEXT, bold=True)
+textbox(s, Inches(0.95), Inches(3.75), Inches(8.3), Inches(0.7), "Questions ?", 22, GOLD)
+textbox(s, Inches(0.95), Inches(6.55), Inches(8.3), Inches(0.5),
+        "https://github.com/sidevconcept/couverture-junit-cucumber-jacoco  —  sidev.concept06@gmail.com",
+        12, MUTED)
+
+# QR code vers le depot — genere par presentation/build/generate_qr.py,
+# stocke dans presentation/screenshots/ comme les autres visuels du support.
+textbox(s, Inches(9.9), Inches(2.2), Inches(2.1), Inches(0.35), "Scanne-moi", 13, GOLD, bold=True, align=PP_ALIGN.CENTER)
+picture(s, f"{SCREENSHOTS}/qr-github.png", Inches(9.7), Inches(2.6), Inches(2.5), frame_color=CREAM)
 skip_footer()
 
 OUT ="/Users/sidneycohen/dev/projects/couverture-code/presentation/couverture-code-conference.pptx"
