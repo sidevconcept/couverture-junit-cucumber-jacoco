@@ -46,3 +46,6 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Journal des prompts : gardé en local, jamais suivi par git
+PROMPT.md
