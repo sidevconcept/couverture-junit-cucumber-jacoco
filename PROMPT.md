@@ -373,3 +373,48 @@ Jacoco toujours verts (26 classes analysées, proxies CDI inclus).
 - `vidocq-app/README.md`, `CLAUDE.md`, `DESCRIPTION.md` mis à jour avec les
   trois pièges ci-dessus, en détail, pour ne pas avoir à refaire cette
   recherche si le module est retouché plus tard.
+
+---
+
+## 2026-09-14 — Retour au focus conférence : QR code sur la dernière slide
+
+**Contexte** : entre la session précédente et celle-ci, l'utilisateur a
+demandé un module `dashboard-app` (client HTTP + TDD), l'a vu fonctionner
+en direct (`montres moi le dashboard`), puis a posé une question de
+clarification (`c'est quoi le lien vers le dashboard ?` — pas de lien,
+c'était un rapport console, pas un endpoint web, choix fait explicitement
+plus tôt). Il a ensuite **rollback et supprimé** ce module de lui-même,
+avant cette session — `dashboard-app/`, les entrées `PROMPT.md`
+correspondantes et les modifications de `CLAUDE.md`/`DESCRIPTION.md`/
+`pom.xml`/`scripts/coverage-summary.sh` qui l'accompagnaient ont disparu du
+disque. Traité comme l'état de référence voulu, pas annulé ni recréé.
+
+**Prompt (verbatim) :**
+
+> j'ai rollback et supprimé le dashboard, on va se focaliser sur le talk et
+> acomplir le speach, les slides et faire quelque chose de propre. je te
+> demande donc de mettre un QR Code sur le dernier slide pour le github :
+> https://github.com/sidevconcept/couverture-junit-cucumber-jacoco
+
+**Découverte en cours de route** : le `.pptx` sur disque différait du
+dernier commit (taille différente) — inspection avec `python-pptx` :
+l'utilisateur avait édité la slide finale **directement dans PowerPoint**
+pour y mettre la vraie URL du dépôt et le vrai email, remplaçant les
+placeholders `<ton-repo>`/`<ton-email>` du script. Pour ne pas perdre cette
+personnalisation à la prochaine régénération (rappel `CLAUDE.md` : ne
+jamais éditer le `.pptx` à la main), les mêmes valeurs ont été reportées
+**dans le script générateur** avant de régénérer, plutôt que d'éditer le
+fichier binaire directement.
+
+**Travail réalisé :**
+- `presentation/build/generate_qr.py` (nouveau) : génère
+  `presentation/screenshots/qr-github.png` (QR navy sur fond crème,
+  cohérent avec la palette du support) à partir de l'URL du dépôt.
+- `presentation/build/generate_pptx.py` : slide « Merci » — QR code ajouté
+  en haut à droite (via le helper `picture()` déjà existant), ligne de
+  contact mise à jour avec la vraie URL/email ; slide « Pour aller plus
+  loin » — lien du dépôt synchronisé avec la même URL réelle.
+- `presentation/couverture-code-conference.pptx` régénéré (28 slides,
+  aucun débordement vérifié).
+- `presentation/build/README.md`, `CLAUDE.md` mis à jour (étape de
+  génération du QR code, note sur les valeurs en dur dans le script).

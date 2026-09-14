@@ -180,10 +180,20 @@ Cinq livrables doivent rester à jour au fur et à mesure des évolutions :
      générique.
 
 Les captures d'écran vivent dans `presentation/screenshots/` (Jacoco,
-SonarQube, un mock de terminal stylé pour `coverage-summary.sh`) et sont
-régénérées via `presentation/build/` — elles se périment vite (les chiffres
-de couverture changent avec le code), les regénérer avant chaque relecture
-sérieuse du support plutôt que de faire confiance à d'anciennes captures.
+SonarQube, un mock de terminal stylé pour `coverage-summary.sh`, un QR code
+vers le dépôt GitHub sur la dernière slide — `qr-github.png`, généré par
+`presentation/build/generate_qr.py`) et sont régénérées via
+`presentation/build/` — elles se périment vite (les chiffres de couverture
+changent avec le code), les regénérer avant chaque relecture sérieuse du
+support plutôt que de faire confiance à d'anciennes captures.
+
+**Personnalisation de la slide finale** : l'URL du dépôt
+(`https://github.com/sidevconcept/couverture-junit-cucumber-jacoco`) et
+l'email de contact sont en dur dans `generate_pptx.py` (slides « Pour aller
+plus loin » et « Merci ») — ce ne sont plus des placeholders `<ton-repo>`.
+Si le dépôt ou l'email change, mettre à jour le script (et
+`generate_qr.py` pour le QR code) avant de régénérer, pour ne pas perdre la
+synchronisation entre le fichier et son générateur.
 
 ## Style de code
 
