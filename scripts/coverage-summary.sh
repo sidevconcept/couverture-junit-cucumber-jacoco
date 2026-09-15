@@ -14,7 +14,6 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 QUARKUS_TARGET="${PROJECT_ROOT}/quarkus-app/target"
-VIDOCQ_TARGET="${PROJECT_ROOT}/vidocq-app/target"
 
 SEUIL_ROUGE="${1:-50}"
 SEUIL_VERT="${2:-80}"
@@ -85,22 +84,16 @@ if [[ ! -f "${QUARKUS_TARGET}/jacoco-report/jacoco.csv" ]]; then
 fi
 
 echo "${BOLD}Récap couverture de code — couverture-code${RESET}"
-echo "quarkus-app : trois vues (JUnit seul, Cucumber seul, globale) — vidocq-app : une vue (JUnit)."
+echo "Trois vues : JUnit seul, Cucumber seul, puis la vue globale (union des deux)."
 
 echo ""
-echo "${BOLD}════ quarkus-app ════${RESET}"
 print_table "JUNIT — tests unitaires" "${QUARKUS_TARGET}/jacoco-report-junit/jacoco.csv"
 print_table "CUCUMBER — tests d'intégration (BDD)" "${QUARKUS_TARGET}/jacoco-report-cucumber/jacoco.csv"
 print_table "GLOBAL — JUnit + Cucumber réunis" "${QUARKUS_TARGET}/jacoco-report/jacoco.csv"
-
-echo ""
-echo "${BOLD}════ vidocq-app ════${RESET}"
-print_table "JUNIT — logique métier portée (phase 1, sans framework)" "${VIDOCQ_TARGET}/site/jacoco/jacoco.csv"
 
 echo ""
 echo "Rapports HTML détaillés :"
 echo "  quarkus-app/target/jacoco-report-junit/index.html"
 echo "  quarkus-app/target/jacoco-report-cucumber/index.html"
 echo "  quarkus-app/target/jacoco-report/index.html"
-echo "  vidocq-app/target/site/jacoco/index.html"
 echo ""

@@ -8,21 +8,16 @@
 
     <name>couverture-code</name>
     <description>
-        Support de conference sur la couverture de tests Java : la meme demo
-        (agenda d'evenements) portee sur deux stacks differentes, pour comparer
-        JUnit/Cucumber/Jacoco d'un framework a l'autre.
+        Support de conference sur la couverture de tests Java : une demo
+        Quarkus (agenda d'evenements) pour illustrer JUnit, Cucumber et Jacoco.
     </description>
 
     <!--
-        Agregateur pur : chaque module reste volontairement autonome (pas de
-        <parent> partage) pour ne pas coupler leurs cycles de dependances
-        respectifs (BOM Quarkus d'un cote, coordonnees Vidocq de l'autre).
-        `./mvnw test` depuis la racine construit les deux modules dans le
-        reacteur ; `./mvnw -pl quarkus-app test` ou `-pl vidocq-app` cible
-        un seul module.
+        Agregateur pur (pas de <parent> partage) : `./mvnw test` depuis la
+        racine construit le module ; `./mvnw -pl quarkus-app test` fait la
+        meme chose explicitement.
     -->
     <modules>
         <module>quarkus-app</module>
-        <module>vidocq-app</module>
     </modules>
 </project>

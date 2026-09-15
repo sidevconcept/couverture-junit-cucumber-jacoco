@@ -16,19 +16,13 @@ pour donner à la conférence un exemple concret et mesuré (pas inventé) de
 
 ## Structure du dépôt
 
-Reactor Maven multi-module (`pom.xml` racine en `packaging=pom`) :
+`pom.xml` racine en simple agrégateur (`packaging=pom`) avec un seul module :
 
 - **`quarkus-app/`** — la démo complète et entièrement validée : Quarkus,
   JUnit, Cucumber, Jacoco (scindé par type de test), SonarQube en bonus.
   Documentée en détail ci-dessous.
-- **`vidocq-app/`** — la même API REST portée sur
-  [Vidocq](https://vidocq.dev/), un runtime Jakarta EE/MicroProfile récent
-  (v0.3.0) : CDI via Vauban, REST via Cassini, serveur HTTP Chappe. Le
-  serveur tourne réellement (voir « Bonus : la même démo sur Vidocq »
-  ci-dessous). Il manque encore des tests d'intégration et l'équivalent
-  Cucumber (voir `vidocq-app/README.md`).
 
-`./mvnw test` depuis la racine construit et teste les deux modules.
+`./mvnw test` depuis la racine construit et teste le module.
 
 ## Le projet de démo : un agenda malin
 
@@ -270,52 +264,14 @@ couvertes en vert / non couvertes en rouge — utile en direct pendant le
 talk. Identifiants par défaut `admin` / `admin` (changement de mot de passe
 imposé au premier login via l'UI). Ne jamais committer un jeton Sonar.
 
-## Bonus : la même démo sur Vidocq
-
-[Vidocq](https://vidocq.dev/) est un runtime Jakarta EE/MicroProfile récent
-(dernière version stable publiée : 0.3.0), qui se présente comme un
-équivalent « souverain européen » de Quarkus — zéro réflexion, JPMS strict,
-mécanisme d'extension inspiré de Quarkus mais plus simple.
-
-Le module `vidocq-app` fait vraiment tourner l'API : CDI via Vauban
-(`ConflictDetector`, `RecurrenceService`, `EventService`, `HolidayService`,
-`QuoteOfTheDayService` en beans `@ApplicationScoped`), REST via Cassini
-(`CalendarResource`, mêmes routes que `quarkus-app`), servi par Chappe.
-Jacoco reste en configuration simple (un seul agent `prepare-agent` +
-`report`) — pas de classloader spécial à contourner ici, contrairement au
-module Quarkus.
-
-```bash
-./mvnw -pl vidocq-app package -DskipTests
-./vidocq-app/target/dist/bin/vidocq-app
-# Chappe listener 'default' started on http://localhost:8081/
-
-curl -X POST http://localhost:8081/api/calendrier/evenements \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Atelier Vidocq","start":"2026-09-15T09:00:00","end":"2026-09-15T10:30:00","category":"TRAVAIL"}'
-```
-
-Trois pièges non évidents ont été rencontrés (et documentés en détail dans
-`vidocq-app/README.md`) pour en arriver là : un export JPMS manquant pour
-le point d'entrée, deux modes de lancement Vidocq non interchangeables
-(trampoline IDE vs « runtime-first » pour les distributions packagées), et
-un plugin Maven manquant (`vauban-maven-plugin`) sans lequel toutes les
-routes REST répondent 404 sans la moindre erreur.
-
-Reste à faire : tests d'intégration REST (Vidocq n'a pas d'équivalent connu
-à RestAssured — leur propre suite utilise Arquillian) et un équivalent
-Cucumber (aucune intégration connue à ce jour).
-
 ## Comment lancer la démo
 
 ```bash
-./mvnw test                                             # build + tests des DEUX modules
-./scripts/coverage-summary.sh                           # quarkus-app puis vidocq-app
+./mvnw test                                             # build + tests
 
 open quarkus-app/target/jacoco-report-junit/index.html    # couverture JUnit seule
 open quarkus-app/target/jacoco-report-cucumber/index.html # couverture Cucumber seule
 open quarkus-app/target/jacoco-report/index.html          # vue globale (union des deux)
-open vidocq-app/target/site/jacoco/index.html              # couverture vidocq-app
 ```
 
 ## Documentation associée
@@ -325,8 +281,6 @@ open vidocq-app/target/site/jacoco/index.html              # couverture vidocq-a
   ce projet.
 - [`SCRIPT.md`](./SCRIPT.md) — script de présentation à suivre (minutage,
   texte, cues de démo en direct), ton volontairement comique.
-- [`vidocq-app/README.md`](./vidocq-app/README.md) — état d'avancement du
-  portage Vidocq, comment lancer le serveur, et les pièges rencontrés.
 - [`presentation/couverture-code-conference.pptx`](./presentation/couverture-code-conference.pptx) —
   support de la conférence (28 slides pour ~1h, palette bleu marine / tons
   doux, captures d'écran réelles du projet).
