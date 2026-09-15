@@ -281,9 +281,9 @@ open quarkus-app/target/jacoco-report/index.html          # vue globale (union d
   ce projet.
 - [`SCRIPT.md`](./SCRIPT.md) — script de présentation à suivre (minutage,
   texte, cues de démo en direct), ton volontairement comique.
-- [`presentation/couverture-code-conference.pptx`](./presentation/couverture-code-conference.pptx) —
-  support de la conférence (28 slides pour ~1h, palette bleu marine / tons
-  doux, captures d'écran réelles du projet).
+- [`presentation/couverture-code-conference-dynamite.pptx`](./presentation/couverture-code-conference-dynamite.pptx) —
+  support de la conférence, édition « Dynamite » (29 slides pour ~1h,
+  palette sombre contrastée, captures d'écran réelles du projet).
 - [`presentation/build/`](./presentation/build/) — scripts de génération du
   pptx et des captures d'écran (voir `README.md` du dossier).
 - [`sonarqube/docker-compose.yml`](./sonarqube/docker-compose.yml) —

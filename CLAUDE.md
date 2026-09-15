@@ -144,19 +144,22 @@ Cinq livrables doivent rester à jour au fur et à mesure des évolutions :
    "évidentes" du métier) — c'est un choix délibéré de l'utilisateur, ne pas
    le "assagir" sans demande explicite. À tenir à jour si l'ordre ou le
    contenu des slides change (le minutage notamment).
-5. **`presentation/couverture-code-conference.pptx`** — le support de
-   présentation pour la conférence (28 slides pour ~1h, avec captures d'écran
-   réelles du projet — pas des maquettes). Généré via `python-pptx` : le
-   script source et tout ce qui produit les captures d'écran sont versionnés
-   dans `presentation/build/` (voir `presentation/build/README.md` pour la
-   procédure complète de régénération). **Ne jamais éditer le `.pptx`
-   directement** — toujours régénérer via
-   `presentation/build/generate_pptx.py` si un changement structurel est
-   nécessaire, pour que le fichier reste reproductible. Contraintes de
-   design à respecter strictement :
-   - palette **bleu marine** + tons **doux pour les yeux** (fond crème/écru,
-     pas de blanc pur ni de noir pur, accents or/terracotta/sauge en petites
-     touches) ;
+5. **`presentation/couverture-code-conference-dynamite.pptx`** — le support
+   de présentation pour la conférence, édition « Dynamite » (29 slides pour
+   ~1h, avec captures d'écran réelles du projet — pas des maquettes).
+   Généré via `python-pptx` : le script source
+   (`presentation/build/generate_pptx_dynamite.py`) et tout ce qui produit
+   les captures d'écran sont versionnés dans `presentation/build/` (voir
+   `presentation/build/README.md` pour la procédure complète de
+   régénération). **Ne jamais éditer le `.pptx` directement** — toujours
+   régénérer via `presentation/build/generate_pptx_dynamite.py` si un
+   changement structurel est nécessaire, pour que le fichier reste
+   reproductible. Contraintes de design à respecter strictement :
+   - palette sombre et contrastée (fond quasi-noir/marine, accents saturés
+     ambre/teal/lime/corail, jaune surligneur réservé aux punchlines) —
+     signature visuelle : rubans diagonaux pour les étiquettes de section,
+     cartes « autocollant » avec ombre portée, bulles de BD pour les vannes,
+     fenêtres façon navigateur/terminal pour les captures d'écran ;
    - **pas d'"AI slop"** : pas d'icônes stock génériques, pas de dégradés
      criards, pas de robot/IA en illustration, pas de listes à puces
      génériques — préférer des diagrammes construits à partir de vraies
@@ -165,6 +168,12 @@ Cinq livrables doivent rester à jour au fur et à mesure des évolutions :
      chiffres inventés) ;
    - contenu original et spécifique à ce projet, pas de texte de remplissage
      générique.
+
+   `presentation/build/generate_pptx.py` (édition « bleu marine » d'origine)
+   reste dans le dépôt à titre de référence historique, mais son `.pptx` a
+   été retiré du suivi git : Dynamite est désormais l'unique support de
+   référence. Ne pas régénérer/recommitter l'édition d'origine sans en
+   discuter avec l'utilisateur au préalable.
 
 Les captures d'écran vivent dans `presentation/screenshots/` (Jacoco,
 SonarQube, un mock de terminal stylé pour `coverage-summary.sh`, un QR code
@@ -176,9 +185,9 @@ support plutôt que de faire confiance à d'anciennes captures.
 
 **Personnalisation de la slide finale** : l'URL du dépôt
 (`https://github.com/sidevconcept/couverture-junit-cucumber-jacoco`) et
-l'email de contact sont en dur dans `generate_pptx.py` (slides « Pour aller
-plus loin » et « Merci ») — ce ne sont plus des placeholders `<ton-repo>`.
-Si le dépôt ou l'email change, mettre à jour le script (et
+l'email de contact sont en dur dans `generate_pptx_dynamite.py` (slides
+« Pour aller plus loin » et « Merci ») — ce ne sont plus des placeholders
+`<ton-repo>`. Si le dépôt ou l'email change, mettre à jour le script (et
 `generate_qr.py` pour le QR code) avant de régénérer, pour ne pas perdre la
 synchronisation entre le fichier et son générateur.
 

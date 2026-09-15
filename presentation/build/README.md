@@ -1,7 +1,7 @@
 # Régénérer la présentation
 
 Le pptx et les captures d'écran sont générés par script — ne pas éditer
-`couverture-code-conference.pptx` à la main.
+`couverture-code-conference-dynamite.pptx` à la main.
 
 ## Mise en place (une fois)
 
@@ -57,7 +57,13 @@ d'adresse, puis relancer avant de régénérer le pptx.
 ## Régénérer le pptx
 
 ```bash
-./.venv/bin/python presentation/build/generate_pptx.py
+./.venv/bin/python presentation/build/generate_pptx_dynamite.py
 ```
 
-Écrit directement dans `presentation/couverture-code-conference.pptx`.
+Écrit directement dans `presentation/couverture-code-conference-dynamite.pptx`
+— c'est le support de référence actuel.
+
+`generate_pptx.py` (édition « bleu marine » d'origine) reste dans ce
+dossier à titre de référence historique, mais son `.pptx` n'est plus
+versionné — ne le régénère pas sans en discuter avec l'utilisateur au
+préalable.

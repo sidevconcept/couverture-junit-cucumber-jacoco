@@ -1,7 +1,9 @@
 # Script de présentation — « La couverture de code, sans blabla »
 
 Script à suivre pour une conférence d'environ **60 minutes** (+ questions),
-support : `presentation/couverture-code-conference.pptx` (28 slides).
+support : `presentation/couverture-code-conference-dynamite.pptx` (29 slides,
+édition « Dynamite » — UI redessinée, même contenu que l'édition officielle
+plus une slide bonus et la bio personnalisée).
 Ton : technique mais décontracté, jeux de mots assumés, on se moque
 gentiment des situations que tout développeur reconnaît.
 
@@ -12,9 +14,9 @@ gentiment des situations que tout développeur reconnaît.
 
 > **Mise à jour** : une bonne partie des vannes ci-dessous sont désormais
 > aussi écrites en clair sur les slides elles-mêmes (pas seulement dans ce
-> script) — voir `presentation/build/generate_pptx.py`. Rien n'empêche de
-> les dire à voix haute en plus : le texte à l'écran sert de filet, pas de
-> substitut à la livraison orale.
+> script) — voir `presentation/build/generate_pptx_dynamite.py`. Rien
+> n'empêche de les dire à voix haute en plus : le texte à l'écran sert de
+> filet, pas de substitut à la livraison orale.
 
 ## Minutage indicatif
 
@@ -24,17 +26,18 @@ gentiment des situations que tout développeur reconnaît.
 | Le problème | 5 | 3 min | 10 min |
 | La stack | 6–7 | 7 min | 17 min |
 | JUnit | 8–9 | 6 min | 23 min |
-| Cucumber | 10–11 | 6 min | 29 min |
-| Le match + bascule | 12–13 | 3 min | 32 min |
-| **Live demo #1** — `mvn test` | (terminal) | 5 min | 37 min |
-| Jacoco (théorie + captures) | 14–18 | 12 min | 49 min |
-| **Live demo #2** — récap + rapport HTML | (terminal) | 4 min | 53 min |
-| En direct (recap 3 commandes) | 19 | 1.5 min | 54.5 min |
-| Bonus SonarQube | 20–23 | 8 min | 62.5 min |
-| Excuses + retour d'expérience | 24–25 | 7 min | 69.5 min |
-| Conclusion | 26–28 | 4.5 min | 74 min |
+| FIRST vs SOLID (bonus théorie) | 10 | 2 min | 25 min |
+| Cucumber | 11–12 | 6 min | 31 min |
+| Le match + bascule | 13–14 | 3 min | 34 min |
+| **Live demo #1** — `mvn test` | (terminal) | 5 min | 39 min |
+| Jacoco (théorie + captures) | 15–19 | 12 min | 51 min |
+| **Live demo #2** — récap + rapport HTML | (terminal) | 4 min | 55 min |
+| En direct (recap 3 commandes) | 20 | 1.5 min | 56.5 min |
+| Bonus SonarQube | 21–24 | 8 min | 64.5 min |
+| Excuses + retour d'expérience | 25–26 | 7 min | 71.5 min |
+| Conclusion | 27–29 | 4.5 min | 76 min |
 
-74 minutes de contenu pour un créneau d'1h : deux soupapes de sécurité sont
+76 minutes de contenu pour un créneau d'1h : deux soupapes de sécurité sont
 identifiées ci-dessous (⏱️ **coupable si en retard**) — les couper ramène
 pile à l'heure.
 
@@ -59,16 +62,19 @@ pour ceux qui tiennent jusqu'au bout. »
 
 ## Slide 2 — Qui suis-je (2 min)
 
-*(Personnalisez avec votre vraie bio. Gardez la structure : fait crédible →
-fait drôle → pourquoi vous êtes légitime.)*
+« Sidney Cohen. 21 ans de développement, dont 10 ans de Java — largement
+de quoi avoir déjà tout cassé au moins une fois. Deux, si on compte la
+prod.
 
-« [X années] à écrire du Java, [contexte pro]. J'ai un ratio tests/code que
-je ne montrerai à personne ici — certains d'entre vous ont peut-être le
-même, on ne juge pas, on est entre adultes consentants qui ont tous une
-classe `Utils.java` de 2000 lignes non testée quelque part.
+Question tests : je ne les ai pas toujours écrits par vertu. Longtemps,
+c'était sous la contrainte — pas de tests, pas de PR validée. Et ma phrase
+préférée à l'époque, c'était : "c'est bon, les tests sont tous verts."
+Vous allez comprendre dans les prochaines minutes pourquoi cette phrase ne
+veut absolument rien dire.
 
-Je suis là ce soir pour une raison précise : vous convaincre de regarder
-votre VRAI rapport de couverture. Pas celui que vous imaginez avoir. »
+Et si vous vous demandez pourquoi je suis là ce soir : honnêtement,
+c'était soit ça, soit vous refaire une présentation sur l'IA. Vous l'avez
+échappé belle. »
 
 ---
 
@@ -171,7 +177,28 @@ lancer ces tests-là en boucle toute la journée. »
 
 ---
 
-## Slide 10 — Zoom Cucumber : le grand angle (3 min)
+## Slide 10 — FIRST vs SOLID (2 min)
+
+« Petite parenthèse théorique, promis ça ne prend pas trois ans : vous
+connaissez SOLID, les cinq principes pour écrire du code propre ? Eh bien
+il existe un équivalent pour les tests, ça s'appelle FIRST.
+
+Fast — rapide, sinon vous arrêtez de les lancer, on vient de le voir avec
+`ConflictDetectorTest`. Isolated — indépendant de tout autre test, de tout
+ordre d'exécution. Repeatable — même résultat sur votre machine, en CI, à
+3h du matin un jour de démo foireuse. Self-Validating — le test vous dit
+lui-même s'il passe, vous n'avez pas à relire un log à la main pour
+savoir. Et Timely — écrit EN MÊME TEMPS que le code, pas trois sprints
+après. Spoiler : "trois sprints après" n'arrive jamais, c'est un mythe,
+comme la vélocité du dernier sprint.
+
+Voilà, c'est tout. SOLID range le code pour qu'il reste maintenable. FIRST
+range les tests pour qu'on continue à leur faire confiance. Même réflexe,
+cinq lettres, deux mondes différents. »
+
+---
+
+## Slide 11 — Zoom Cucumber : le grand angle (3 min)
 
 « Cucumber, c'est le grand angle. On ne regarde plus une méthode, on
 regarde le comportement du point de vue de quelqu'un qui utilise l'API.
@@ -184,7 +211,7 @@ vendredi soir. »
 
 ---
 
-## Slide 11 — Cucumber en action (3 min)
+## Slide 12 — Cucumber en action (3 min)
 
 « "Étant donné que j'ai déjà l'événement Comité de pilotage... quand je
 crée Revue de code au même horaire... alors la création est refusée." Vous
@@ -196,7 +223,7 @@ simulation : c'est un vrai appel HTTP, comme le ferait un vrai client. »
 
 ---
 
-## Slide 12 — Le match : JUnit vs Cucumber (2 min)
+## Slide 13 — Le match : JUnit vs Cucumber (2 min)
 
 « Alors, qui gagne ? *(pause)* Personne. Et c'est le point important : ce
 n'est pas un combat, c'est un tandem. JUnit sans Cucumber, vous validez la
@@ -210,7 +237,7 @@ couverture. C'est là que ça devient intéressant. »
 
 ---
 
-## Slide 13 — Bascule live demo (0.5 min)
+## Slide 14 — Bascule live demo (0.5 min)
 
 « On arrête PowerPoint. Direction le terminal, pour de vrai. »
 
@@ -239,7 +266,7 @@ rapports de couverture, en silence, sans qu'on lui demande deux fois. »
 
 ---
 
-## Slide 14 — Zoom Jacoco : comment ça marche (3 min)
+## Slide 15 — Zoom Jacoco : comment ça marche (3 min)
 
 « Jacoco, en trois étapes : au démarrage de la JVM, un agent Java
 s'attache et instrumente chaque classe chargée — au sens propre, il modifie
@@ -253,7 +280,7 @@ curieux, payé en aucune façon, qui note tout ce qu'il voit. »
 
 ---
 
-## Slide 15 — Jacoco, vue d'ensemble (2 min)
+## Slide 16 — Jacoco, vue d'ensemble (2 min)
 
 *(Montrer la capture d'écran — préciser que c'est un vrai export, pas une
 maquette)*
@@ -265,7 +292,7 @@ en clonant le repo — le lien arrive en fin de conf. »
 
 ---
 
-## Slide 16 — Jacoco, la preuve dans le code (3 min)
+## Slide 17 — Jacoco, la preuve dans le code (3 min)
 
 *(LE moment fort visuel — laisser la slide respirer quelques secondes avant
 de parler)*
@@ -284,7 +311,7 @@ C'est exactement le genre de ligne rouge que votre suite de tests, verte à
 
 ---
 
-## Slide 17 — JUnit vs Cucumber dans Jacoco (3 min)
+## Slide 18 — JUnit vs Cucumber dans Jacoco (3 min)
 
 « Et voilà où ça devient franchement amusant : on a scindé le rapport par
 type de test. `CalendarResource`, la couche REST : 0 % en JUnit, 58 % en
@@ -298,7 +325,7 @@ réel de scinder ce rapport : arrêter de croire qu'"on a des tests" veut dire
 
 ---
 
-## Slide 18 — Le terminal, récap coloré (2 min)
+## Slide 19 — Le terminal, récap coloré (2 min)
 
 « Et si vous n'avez pas envie d'ouvrir un navigateur à chaque commit,
 `coverage-summary.sh` fait le café à votre place : rouge, orange, vert,
@@ -321,12 +348,12 @@ open target/jacoco-report/index.html
 ```
 
 Naviguer en direct jusqu'à `RecurrenceService.java` pour retrouver le rouge
-vu sur la slide 16 — « vous voyez, ce n'était pas une capture triée sur le
+vu sur la slide 17 — « vous voyez, ce n'était pas une capture triée sur le
 volet, c'est vraiment là. »
 
 ---
 
-## Slide 19 — En direct : trois commandes (1.5 min)
+## Slide 20 — En direct : trois commandes (1.5 min)
 
 « Pour résumer ce qu'on vient de faire, en vrai, sans trucage : trois
 commandes. `mvn test`, le script de récap, et le rapport HTML. C'est tout.
@@ -335,7 +362,7 @@ Rien d'exotique, rien à installer de plus que ce qu'on a déjà dans le
 
 ---
 
-## Slide 20 — Bonus SonarQube (2 min)
+## Slide 21 — Bonus SonarQube (2 min)
 
 « Le terminal et le HTML brut, c'est très bien pour un développeur seul
 face à son clavier à 23h. Mais si vous voulez que toute l'équipe — y compris
@@ -353,7 +380,7 @@ l'évidence. »
 
 ---
 
-## Slide 21 — SonarQube, dashboard (2 min)
+## Slide 22 — SonarQube, dashboard (2 min)
 
 « 77,7 % de couverture, "Quality Gate: Passed", en vrai, dans l'interface —
 générée à partir des deux mêmes rapports Jacoco XML qu'on vient de montrer
@@ -362,7 +389,7 @@ déjà produit et recalcule l'union tout seul. »
 
 ---
 
-## Slide 22 — SonarQube, mesures par fichier (2 min)
+## Slide 23 — SonarQube, mesures par fichier (2 min)
 
 « Et là, le détail fichier par fichier — vous reconnaissez les mêmes
 pourcentages que dans notre terminal, `CalendarResource` à 56-58 %,
@@ -370,20 +397,20 @@ pourcentages que dans notre terminal, `CalendarResource` à 56-58 %,
 
 ---
 
-## Slide 23 — SonarQube, la preuve encore (2 min)
+## Slide 24 — SonarQube, la preuve encore (2 min)
 
 « Et la même branche MENSUELLE, en rouge, dans une interface complètement
 différente. Ça devrait vous rassurer plutôt que vous ennuyer : ce n'est pas
 un artefact d'un outil bizarre, c'est un fait sur votre code, que deux
 outils indépendants confirment. »
 
-⏱️ **Soupape #1 si en retard : sauter les slides 21-23 et ne montrer que
-la 20 (les chiffres), en disant "les captures sont dans le support, je vous
+⏱️ **Soupape #1 si en retard : sauter les slides 22-24 et ne montrer que
+la 21 (les chiffres), en disant "les captures sont dans le support, je vous
 laisse les admirer après".**
 
 ---
 
-## Slide 24 — Les excuses classiques (3 min)
+## Slide 25 — Les excuses classiques (3 min)
 
 *(LE moment humour assumé — jouer le ton "je les ai toutes dites un jour")*
 
@@ -413,7 +440,7 @@ en prod. Pas une seule. J'ai vérifié. Enfin... je crois. »
 
 ---
 
-## Slide 25 — Retour d'expérience : deux pièges qu'on a vraiment eus (4 min)
+## Slide 26 — Retour d'expérience : deux pièges qu'on a vraiment eus (4 min)
 
 « Et pour finir sur une note d'humilité : même en préparant CETTE conf, on
 s'est fait avoir. Deux fois.
@@ -440,7 +467,7 @@ QuarkusClassLoader, le plus instructif) et enchaîner.**
 
 ---
 
-## Slide 26 — Ce qu'il faut retenir (2 min)
+## Slide 27 — Ce qu'il faut retenir (2 min)
 
 « Quatre points, et je vous laisse partir :
 
@@ -459,7 +486,7 @@ la question qu'on ne s'est pas posée. »
 
 ---
 
-## Slide 27 — Pour aller plus loin (1.5 min)
+## Slide 28 — Pour aller plus loin (1.5 min)
 
 « Le dépôt complet est public : code et scripts, en clair. Le journal des
 prompts utilisés pour construire tout ça reste privé, lui — même une
@@ -469,7 +496,7 @@ pour creuser sans moi. »
 
 ---
 
-## Slide 28 — Merci / Questions
+## Slide 29 — Merci / Questions
 
 « Merci de votre attention. Et si quelqu'un me dit "chez nous on a 100 % de
 couverture", je réponds déjà : sur quelle branche ? »
@@ -492,4 +519,4 @@ couverture", je réponds déjà : sur quelle branche ? »
   être filées en transition entre plusieurs slides plutôt que concentrées —
   ne pas insister si une vanne tombe à plat, enchaîner sur le fond.
 - **Si le temps déborde** : utiliser les deux soupapes identifiées
-  (slides 21-23 et slide 25) avant de couper la partie technique.
+  (slides 22-24 et slide 26) avant de couper la partie technique.
