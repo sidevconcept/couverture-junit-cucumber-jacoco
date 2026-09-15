@@ -3,8 +3,7 @@
 Support technique d'une conférence sur les tests des applications Java :
 un mini agenda d'événements sert de terrain d'exemple pour montrer, lors
 d'un build, **un rapport de couverture de code qui révèle quelles classes
-ont besoin d'être mieux testées** — et pour comparer comment ça se passe
-sur deux stacks Jakarta EE différentes.
+ont besoin d'être mieux testées**.
 
 > Ce n'est pas un produit. La logique métier contient volontairement des
 > trous de couverture, mesurés et non inventés — voir
@@ -13,49 +12,27 @@ sur deux stacks Jakarta EE différentes.
 ## Démarrage rapide
 
 ```bash
-./mvnw test                                                # build + tests des deux modules
+./mvnw test                                                # build + tests
 ./scripts/coverage-summary.sh                               # récap couleur dans le terminal
 
 open quarkus-app/target/jacoco-report-junit/index.html      # couverture JUnit seule
 open quarkus-app/target/jacoco-report-cucumber/index.html   # couverture Cucumber seule
 open quarkus-app/target/jacoco-report/index.html            # vue globale (union des deux)
-open vidocq-app/target/site/jacoco/index.html                # couverture vidocq-app
 ```
 
 ## Structure du dépôt
 
-Reactor Maven multi-module — `quarkus-app` et `vidocq-app` portent **la même
-API REST**, sans se partager de code ni de `<parent>` (cycles de dépendances
-volontairement indépendants) :
+`pom.xml` racine en simple agrégateur (`packaging=pom`) avec un seul module,
+`quarkus-app` : Quarkus 3.39.2 + JUnit 5 + Cucumber (FR) + Jacoco (rapport
+scindé JUnit/Cucumber/global) + SonarQube en bonus.
 
-```mermaid
-flowchart TB
-    ROOT["pom.xml racine\npackaging=pom · agrégateur reactor"]
-
-    subgraph Q["quarkus-app — démo principale, validée bout en bout"]
-        QT["Quarkus 3.39.2 + JUnit 5 + Cucumber (FR)\n+ Jacoco (rapport scindé JUnit/Cucumber/global)\n+ SonarQube en bonus"]
-    end
-
-    subgraph V["vidocq-app — portage souverain européen"]
-        VT["Vidocq 0.3.0 : CDI (Vauban) + REST (Cassini)\nsur le serveur Chappe · JPMS strict, zéro réflexion\nJacoco simple, pas encore de tests d'intégration REST"]
-    end
-
-    ROOT --> Q
-    ROOT --> V
-
-    classDef root fill:#0B1D36,color:#EFECE3,stroke:none;
-    classDef mod fill:#EAE6DA,color:#16283E,stroke:none;
-    class ROOT root;
-    class QT,VT mod;
-```
-
-`./mvnw test` depuis la racine construit et teste **les deux modules** ;
-`./mvnw -pl quarkus-app test` ou `-pl vidocq-app` pour cibler l'un des deux.
+`./mvnw test` depuis la racine construit et teste le module ; `./mvnw -pl
+quarkus-app test` fait la même chose explicitement.
 
 ## Comment fonctionne l'application
 
 Un agenda en mémoire (aucune base de données, `ConcurrentHashMap` dans
-`EventService`) exposé par une API REST identique sur les deux modules :
+`EventService`) exposé par une API REST :
 
 ```mermaid
 flowchart TB
@@ -217,13 +194,10 @@ de la démo.
 ## Documentation associée
 
 - [`DESCRIPTION.md`](./DESCRIPTION.md) — description complète du projet,
-  modèle de domaine, mesures de couverture réelles, bonus SonarQube et
-  Vidocq.
+  modèle de domaine, mesures de couverture réelles, bonus SonarQube.
 - [`CLAUDE.md`](./CLAUDE.md) — conventions et instructions du projet.
 - [`SCRIPT.md`](./SCRIPT.md) — script de présentation (minutage, texte, cues
   de démo en direct), ton volontairement comique.
-- [`vidocq-app/README.md`](./vidocq-app/README.md) — état d'avancement du
-  portage Vidocq, comment lancer le serveur, et les trois pièges rencontrés.
 - [`presentation/`](./presentation/) — support de la conférence (pptx +
   scripts de génération).
 - [`sonarqube/docker-compose.yml`](./sonarqube/docker-compose.yml) —
