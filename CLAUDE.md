@@ -126,8 +126,14 @@ Cinq livrables doivent rester à jour au fur et à mesure des évolutions :
 2. **`PROMPT.md`** — le journal de **tous** les prompts utilisés pour
    construire ce projet avec Claude Code, dans l'ordre chronologique. Chaque
    nouvelle session de travail doit y ajouter une entrée (date + prompt
-   utilisateur, résumé succinct si le prompt est long). Ne jamais réécrire
-   l'historique existant, seulement ajouter à la suite.
+   utilisateur, résumé succinct si le prompt est long) — toujours en
+   ajoutant à la suite, jamais en réécrivant les entrées existantes.
+   **Fichier local, non versionné** : listé dans `.gitignore`, il ne doit
+   jamais être `git add`é ni commité (son historique git a été purgé du
+   dépôt le 2026-09-14, à la demande de l'utilisateur, pour ne pas exposer
+   publiquement le détail de tous les prompts). Il reste présent sur le
+   disque et continue d'être tenu à jour à chaque session, simplement en
+   dehors du suivi git.
 3. **`DESCRIPTION.md`** — description du projet (objectif, architecture,
    choix techniques) illustrée par des **diagrammes Mermaid** (architecture,
    séquence, flux de build/couverture). À tenir à jour si l'architecture du

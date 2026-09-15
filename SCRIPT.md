@@ -10,6 +10,12 @@ gentiment des situations que tout développeur reconnaît.
 > jetez les autres sans remords. C'est comme la couverture de code : viser
 > 100 % d'un script figé serait raté.
 
+> **Mise à jour** : une bonne partie des vannes ci-dessous sont désormais
+> aussi écrites en clair sur les slides elles-mêmes (pas seulement dans ce
+> script) — voir `presentation/build/generate_pptx.py`. Rien n'empêche de
+> les dire à voix haute en plus : le texte à l'écran sert de filet, pas de
+> substitut à la livraison orale.
+
 ## Minutage indicatif
 
 | Bloc | Slides | Durée | Cumulé |
@@ -455,10 +461,11 @@ la question qu'on ne s'est pas posée. »
 
 ## Slide 27 — Pour aller plus loin (1.5 min)
 
-« Le dépôt complet est public : code, scripts, et même le journal de tous
-les prompts utilisés pour le construire, si ça vous amuse de voir les
-coulisses. Plus les guides officiels Quarkus, Cucumber et SonarQube pour
-creuser sans moi. »
+« Le dépôt complet est public : code et scripts, en clair. Le journal des
+prompts utilisés pour construire tout ça reste privé, lui — même une
+conférence sur la transparence des tests a le droit de garder deux ou
+trois secrets. Plus les guides officiels Quarkus, Cucumber et SonarQube
+pour creuser sans moi. »
 
 ---
 
