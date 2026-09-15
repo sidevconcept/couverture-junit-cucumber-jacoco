@@ -376,7 +376,7 @@ def side_bar(slide, color):
     rect(slide, Inches(0), Inches(0), Inches(0.2), SLIDE_H, color)
 
 
-TOTAL_SLIDES = 28
+TOTAL_SLIDES = 29
 prs = new_pres()
 
 # ============================================================ 1. TITRE ====
@@ -392,7 +392,7 @@ textbox(s, Inches(1.25), Inches(4.25), Inches(10.7), Inches(0.6),
         "Quarkus  ·  JUnit  ·  Cucumber  ·  Jacoco  ·  (un peu de Sonar en bonus)", 18, AMBER)
 textbox(s, Inches(1.25), Inches(4.85), Inches(10.5), Inches(0.5),
         "Où l'on découvre que « 100 % de couverture » ne veut pas dire « 0 bug ».", 13.5, RGBColor(0xC9, 0xCE, 0xDC), italic=True)
-textbox(s, Inches(1.25), Inches(6.55), Inches(8), Inches(0.5), "Ton nom — Date de la conférence", 13, MUTED_D)
+textbox(s, Inches(1.25), Inches(6.55), Inches(8), Inches(0.5), "Sidney Cohen — 13 octobre 2026", 13, MUTED_D)
 sticker_circle(s, Inches(11.3), Inches(5.85), Inches(1.7), "100%\nauthentique", MARKER, INK, rotation=-10, size=13)
 skip_footer()
 add_transition(s, kind="fade")
@@ -402,12 +402,13 @@ s = blank(prs)
 bg(s, PAPER)
 side_bar(s, AMBER)
 section_tag(s, "Avant de commencer", AMBER, dark=False)
-textbox(s, Inches(0.9), Inches(1.15), Inches(11), Inches(1.1), "Qui suis-je ?", 32, TXT_DARK, bold=True)
+textbox(s, Inches(0.9), Inches(1.15), Inches(11), Inches(0.75), "Qui suis-je ?", 32, TXT_DARK, bold=True)
+textbox(s, Inches(0.9), Inches(1.95), Inches(11), Inches(0.45), "Sidney Cohen", 17, on_light(AMBER), bold=True)
 
 bio = [
-    ("Développeur Java", "Suffisamment d'années pour avoir déjà tout cassé au moins une fois. Deux, si on compte la prod.", AMBER),
-    ("Écrit des tests", "Un ratio tests / code que je ne montrerai à personne — j'ai aussi un Utils.java de 2000 lignes qui préfère qu'on ne l'interroge pas.", TEAL),
-    ("Ici pour une raison précise", "Vous convaincre de regarder VOTRE rapport de couverture. Le vrai. Pas celui que vous imaginez.", CORAL),
+    ("Développeur Java", "10 ans de Java, 21 ans de dev au total — assez pour avoir déjà tout cassé au moins une fois. Deux, si on compte la prod.", AMBER),
+    ("Écrit des tests", "Forcé d'écrire des tests sous la contrainte : pas de tests, pas de PR validée. Ma phrase préférée reste « c'est bon, les tests sont tous verts » — vous allez vite comprendre pourquoi elle ne veut rien dire.", TEAL),
+    ("Ici pour une raison précise", "Honnêtement ? C'était soit ça, soit vous refaire une présentation sur l'IA. Vous l'avez échappé belle.", CORAL),
 ]
 cx, cw, gap = Inches(0.9), Inches(3.58), Inches(0.28)
 for i, (title, body, accent) in enumerate(bio):
@@ -415,11 +416,9 @@ for i, (title, body, accent) in enumerate(bio):
     raised_card(s, left, Inches(2.62), cw, Inches(3.35), PAPER_CARD, PAPER_CARD_HI)
     rect(s, left, Inches(2.62), cw, Inches(0.1), accent)
     textbox(s, left + Inches(0.32), Inches(2.98), cw - Inches(0.6), Inches(0.8), title, 17, TXT_DARK, bold=True, line_spacing=1.1)
-    textbox(s, left + Inches(0.32), Inches(3.82), cw - Inches(0.6), Inches(1.95), body, 13, TXT_DARK, line_spacing=1.2)
+    textbox(s, left + Inches(0.32), Inches(3.82), cw - Inches(0.6), Inches(1.95), body, 12.5, TXT_DARK, line_spacing=1.2)
 speech_bubble(s, Inches(6.2), Inches(2.1), Inches(2.0), Inches(0.62), "confidentiel", fill=INK, text_color=MARKER,
               size=12.5, tail="br")
-textbox(s, Inches(0.9), Inches(6.35), Inches(11), Inches(0.4),
-        "(personnalisez cette slide avec votre vraie bio avant le jour J)", 11, MUTED_L, italic=True)
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
@@ -624,7 +623,47 @@ textbox(s, Inches(0.9), Inches(5.5), Inches(10.8), Inches(1.2),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 10. ZOOM CUCUMBER ======
+# ================================================= 10. FIRST VS SOLID =====
+s = blank(prs)
+bg(s, PAPER)
+side_bar(s, AMBER)
+section_tag(s, "Bonus théorie (vite fait)", AMBER, dark=False)
+headline(s, Inches(0.9), Inches(1.12), Inches(11.5), Inches(1.3),
+         [("SOLID est au clean code ce que ", TXT_DARK, True),
+          ("FIRST", AMBER, True),
+          (" est au test unitaire.", TXT_DARK, True)], 26, line_spacing=1.1)
+
+first_items = [
+    ("F", "Fast", "Rapide — sinon on arrête\nde les lancer.", AMBER),
+    ("I", "Isolated", "Indépendant de tout autre\ntest, de tout ordre.", TEAL),
+    ("R", "Repeatable", "Même résultat : votre machine,\nla CI, 3h du matin.", LIME),
+    ("S", "Self-Validating", "Il dit lui-même s'il passe.\nPas de log à relire.", CORAL),
+    ("T", "Timely", "Écrit avec le code — pas trois\nsprints après (jamais).", INKY_BLUE),
+]
+cx, cw, gap = Inches(0.9), Inches(2.12), Inches(0.22)
+card_top, card_h = Inches(2.75), Inches(2.75)
+for i, (letter, word, desc, accent) in enumerate(first_items):
+    left = cx + i * (cw + gap)
+    raised_card(s, left, card_top, cw, card_h, PAPER_CARD, PAPER_CARD_HI)
+    rect(s, left, card_top, cw, Inches(0.09), accent)
+    textbox(s, left + Inches(0.18), card_top + Inches(0.22), cw - Inches(0.36), Inches(0.6),
+            letter, 34, on_light(accent), bold=True)
+    textbox(s, left + Inches(0.18), card_top + Inches(0.95), cw - Inches(0.36), Inches(0.55),
+            word, 13.5, TXT_DARK, bold=True, line_spacing=1.0)
+    textbox(s, left + Inches(0.18), card_top + Inches(1.5), cw - Inches(0.36), Inches(1.1),
+            desc, 10.5, TXT_DARK, line_spacing=1.2)
+
+speech_bubble(s, Inches(0.9), Inches(5.85), Inches(11.5), Inches(0.85),
+              "SOLID vous dit comment ranger le code pour qu'il reste maintenable. FIRST vous "
+              "dit comment ranger les tests pour qu'on continue à leur faire confiance.",
+              fill=MARKER, text_color=INK, tail="tl", size=13)
+textbox(s, Inches(0.9), Inches(6.85), Inches(11.5), Inches(0.35),
+        "Pour mémoire : SOLID = Single responsibility · Open/closed · Liskov substitution · "
+        "Interface segregation · Dependency inversion.", 10, MUTED_L, italic=True)
+footer(s, TOTAL_SLIDES)
+add_transition(s, kind="fade")
+
+# ================================================= 11. ZOOM CUCUMBER ======
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, TEAL)
@@ -653,7 +692,7 @@ textbox(s, Inches(0.9), Inches(5.55), Inches(10.9), Inches(0.9),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 11. CUCUMBER CODE ======
+# ================================================= 12. CUCUMBER CODE ======
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, TEAL)
@@ -679,7 +718,7 @@ textbox(s, Inches(0.9), Inches(5.8), Inches(10.8), Inches(0.85),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 12. LE MATCH ===========
+# ================================================= 13. LE MATCH ===========
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, MARKER)
@@ -711,7 +750,7 @@ speech_bubble(s, Inches(0.9), Inches(6.2), Inches(11.4), Inches(0.65),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 13. BASCULE DEMO 1 =====
+# ================================================= 14. BASCULE DEMO 1 =====
 s = blank(prs)
 bg(s, INK)
 dot_grid(s, Inches(0.7), Inches(1.0), rows=3, cols=10, color=INK_CARD)
@@ -723,7 +762,7 @@ speech_bubble(s, Inches(2.9), Inches(4.35), Inches(7.5), Inches(0.75),
 footer(s, TOTAL_SLIDES, dark=True)
 add_transition(s, kind="cut")
 
-# ================================================= 14. ZOOM JACOCO ========
+# ================================================= 15. ZOOM JACOCO ========
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, CORAL)
@@ -749,7 +788,7 @@ speech_bubble(s, Inches(0.9), Inches(6.05), Inches(11.4), Inches(0.65),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 15. JACOCO OVERVIEW ====
+# ================================================= 16. JACOCO OVERVIEW ====
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, CORAL)
@@ -763,7 +802,7 @@ textbox(s, Inches(0.9), Inches(6.4), Inches(11), Inches(0.5),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 16. JACOCO PREUVE ======
+# ================================================= 17. JACOCO PREUVE ======
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, CORAL)
@@ -775,7 +814,7 @@ browser_frame(s, f"{SCREENSHOTS}/jacoco-recurrence-source.png", Inches(2.87), In
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 17. JUNIT VS CUC JACOCO=
+# ================================================= 18. JUNIT VS CUC JACOCO=
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, CORAL)
@@ -825,7 +864,7 @@ speech_bubble(s, Inches(0.9), Inches(6.5), Inches(11.4), Inches(0.6),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 18. TERMINAL ===========
+# ================================================= 19. TERMINAL ===========
 s = blank(prs)
 bg(s, INK)
 section_tag(s, "Sans ouvrir de navigateur", MARKER, dark=True)
@@ -837,7 +876,7 @@ textbox(s, Inches(0.9), Inches(6.8), Inches(11.5), Inches(0.4),
 footer(s, TOTAL_SLIDES, dark=True)
 add_transition(s, kind="fade")
 
-# ================================================= 19. EN DIRECT ==========
+# ================================================= 20. EN DIRECT ==========
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, LIME)
@@ -861,7 +900,7 @@ textbox(s, Inches(0.9), Inches(6.5), Inches(11), Inches(0.4),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 20. BONUS SONAR ========
+# ================================================= 21. BONUS SONAR ========
 s = blank(prs)
 bg(s, INK)
 section_tag(s, "Bonus (promis, pas SOAR)", MARKER, dark=True)
@@ -890,7 +929,7 @@ textbox(s, Inches(0.9), Inches(6.5), Inches(10.8), Inches(0.4),
 footer(s, TOTAL_SLIDES, dark=True)
 add_transition(s, kind="fade")
 
-# ================================================= 21. SONAR DASHBOARD ====
+# ================================================= 22. SONAR DASHBOARD ====
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, INKY_BLUE)
@@ -903,7 +942,7 @@ textbox(s, Inches(0.9), Inches(6.55), Inches(11.5), Inches(0.4),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 22. SONAR MEASURES =====
+# ================================================= 23. SONAR MEASURES =====
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, INKY_BLUE)
@@ -916,7 +955,7 @@ textbox(s, Inches(0.9), Inches(6.55), Inches(11.5), Inches(0.4),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 23. SONAR CODE =========
+# ================================================= 24. SONAR CODE =========
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, INKY_BLUE)
@@ -929,7 +968,7 @@ textbox(s, Inches(0.9), Inches(6.55), Inches(11.5), Inches(0.4),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 24. LES EXCUSES ========
+# ================================================= 25. LES EXCUSES ========
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, CORAL)
@@ -957,7 +996,7 @@ speech_bubble(s, Inches(0.9), Inches(6.35), Inches(11.5), Inches(0.7),
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 25. RETOUR D'XP ========
+# ================================================= 26. RETOUR D'XP ========
 s = blank(prs)
 bg(s, INK)
 section_tag(s, "Retour d'expérience", MARKER, dark=True)
@@ -988,7 +1027,7 @@ textbox(s, Inches(0.9), Inches(6.78), Inches(11), Inches(0.4),
 footer(s, TOTAL_SLIDES, dark=True)
 add_transition(s, kind="fade")
 
-# ================================================= 26. A RETENIR ==========
+# ================================================= 27. A RETENIR ==========
 s = blank(prs)
 bg(s, INK)
 section_tag(s, "À retenir", MARKER, dark=True)
@@ -1010,7 +1049,7 @@ for i, (line1, line2) in enumerate(points):
 footer(s, TOTAL_SLIDES, dark=True)
 add_transition(s, kind="fade")
 
-# ================================================= 27. POUR ALLER PLUS LOIN
+# ================================================= 28. POUR ALLER PLUS LOIN
 s = blank(prs)
 bg(s, PAPER)
 side_bar(s, LIME)
@@ -1035,7 +1074,7 @@ for title, url, accent in links:
 footer(s, TOTAL_SLIDES)
 add_transition(s, kind="fade")
 
-# ================================================= 28. MERCI ==============
+# ================================================= 29. MERCI ==============
 s = blank(prs)
 bg(s, INK)
 dot_grid(s, Inches(0.7), Inches(5.3), rows=3, color=INK_CARD)
