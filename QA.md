@@ -211,3 +211,110 @@ aucune assertion), ce n'est pas un test, c'est juste du code qui s'exécute
 précédente.
 
 ---
+
+## Comment fonctionne Jacoco ?
+
+Jacoco ne lit pas le code source : il **instrumente le bytecode** pendant
+l'exécution, et compte ce qui tourne réellement dans la JVM.
+
+1. **Instrumentation par agent (`-javaagent`).** Le `jacoco-maven-plugin`
+   attache un agent à la JVM au moment où Surefire la lance (goal
+   `prepare-agent`, propriété `argLine` injectée dans la config Surefire).
+   Cet agent intercepte chaque classe **au chargement** et réécrit son
+   bytecode à la volée : il insère des compteurs (des « sondes ») à chaque
+   ligne et à chaque branche possible d'un point de décision (`if`,
+   `switch`, `&&`/`||`...). Aucune modification du `.java` ni du `.class`
+   sur disque — tout se passe en mémoire, au chargement.
+2. **Ces sondes s'incrémentent pendant les tests.** Chaque fois qu'une
+   instruction passe par une sonde, un compteur monte. Jacoco ne sait rien
+   du résultat du test (vert ou rouge, assertion vraie ou fausse) — il
+   compte juste des passages, d'où la distinction coverage vs testing vue
+   plus haut.
+3. **À la fin de la JVM, les compteurs sont écrits dans un fichier
+   binaire `.exec`** (format propre à Jacoco, pas du XML). C'est un
+   instantané des compteurs, pas encore un rapport lisible.
+4. **Le rapport est généré après coup** (goal `report` du
+   `jacoco-maven-plugin`) : Jacoco relit le `.exec` **et** les `.class`
+   d'origine (non instrumentés, ceux compilés par Maven), fait
+   correspondre chaque sonde à sa ligne/branche source grâce aux numéros
+   de ligne du bytecode (debug info), et produit HTML/XML/CSV à partir de
+   cette correspondance.
+
+**Piège spécifique à ce projet** (voir aussi `CLAUDE.md`) : avec Quarkus,
+**deux** mécanismes de mesure coexistent et ne se voient pas l'un l'autre.
+
+- L'agent `-javaagent` de `jacoco-maven-plugin` mesure tout ce qui tourne
+  dans le process Surefire classique.
+- L'extension `quarkus-jacoco` (dépendance de test) mesure, **séparément**,
+  tout ce qui tourne dans le `QuarkusClassLoader` — c'est-à-dire les beans
+  CDI appelés depuis un `@QuarkusTest` ou un scénario Cucumber, qui
+  vivent dans un classloader que l'agent standard ne voit pas correctement
+  dans le contexte Quarkus. Elle écrit son propre `.exec`, au chemin fixé
+  par la propriété système `quarkus.jacoco.data-file` (un chemin distinct
+  par exécution Surefire — JUnit et Cucumber — sinon les deux s'écrasent).
+
+D'où l'étape `jacoco:merge` dans le `pom.xml` de `quarkus-app` avant chaque
+`jacoco:report` : on fusionne le `.exec` de l'agent et celui de l'extension
+(par exécution JUnit et Cucumber), puis on fusionne encore tout ensemble
+pour la vue globale — trois `report` distincts à partir de trois jeux de
+`.exec` fusionnés (`jacoco-report-junit/`, `jacoco-report-cucumber/`,
+`jacoco-report/`). Sans ce merge, chaque rapport ne verrait que la moitié
+du code réellement exécuté.
+
+---
+
+## Pourquoi et comment fusionne-t-on les fichiers `.exec` de Jacoco ?
+
+Parce qu'on a **quatre** fichiers `.exec` en sortie des tests, chacun
+incomplet à lui seul, et qu'un rapport a besoin de tout voir à la fois.
+
+**D'où viennent les quatre fichiers.** Pour chaque exécution Surefire
+(JUnit et Cucumber), deux mesures tournent en parallèle et écrivent
+chacune leur propre `.exec` (voir la question précédente sur le
+fonctionnement de Jacoco) :
+
+- `jacoco-junit.exec` / `jacoco-cucumber.exec` — écrits par l'agent
+  `-javaagent` du `jacoco-maven-plugin` (executions `prepare-agent-junit`
+  / `prepare-agent-cucumber`). Sa config porte
+  `<exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>` : il mesure
+  tout **sauf** le code qui tourne dans le conteneur CDI (par exemple
+  `ConflictDetectorTest`, qui instancie directement ses classes, sans
+  passer par Quarkus).
+- `jacoco-junit-quarkus.exec` / `jacoco-cucumber-quarkus.exec` — écrits
+  par l'extension `quarkus-jacoco`, au chemin fixé par la propriété
+  système `quarkus.jacoco.data-file` dans la config Surefire. Elle mesure
+  l'inverse : tout ce qui tourne **dans** le `QuarkusClassLoader` (un bean
+  CDI appelé depuis un `@QuarkusTest` ou un scénario Cucumber).
+
+Le `exclClassLoaders` de l'agent existe justement pour que les deux
+mesures ne se recouvrent jamais — sans lui, le code CDI serait compté
+deux fois. Résultat : **chacun des quatre fichiers ne contient qu'une
+moitié du code réellement exécuté**, jamais la vue complète.
+
+**Le merge recolle les moitiés.** Le `jacoco-maven-plugin` a trois
+executions de goal `merge`, toutes en phase `test` (donc après les
+Surefire, avant les `report`) :
+
+- `merge-junit` : fusionne `jacoco-junit.exec` +
+  `jacoco-junit-quarkus.exec` → `jacoco-junit-all.exec`.
+- `merge-cucumber` : fusionne `jacoco-cucumber.exec` +
+  `jacoco-cucumber-quarkus.exec` → `jacoco-cucumber-all.exec`.
+- `merge-global` : fusionne les **quatre** fichiers d'un coup →
+  `jacoco-merged.exec`.
+
+Techniquement, `jacoco:merge` ne fait rien de subtil : il additionne les
+compteurs de sondes des fichiers en entrée, sonde par sonde (même classe,
+même ligne, même branche) — le résultat est identique à si un seul run
+avait exécuté tout le code des fichiers d'entrée.
+
+**Chaque `.exec` fusionné alimente un seul rapport** : `report-junit` lit
+`jacoco-junit-all.exec` (→ `jacoco-report-junit/`), `report-cucumber` lit
+`jacoco-cucumber-all.exec` (→ `jacoco-report-cucumber/`), `report-global`
+lit `jacoco-merged.exec` (→ `jacoco-report/`, la vue "union des deux"
+citée dans la question sur Sonar). Sans ce merge en amont, le rapport
+JUnit par exemple ne montrerait quasiment aucune ligne de service/resource
+couverte, puisque tout ce code-là tourne dans le `QuarkusClassLoader` et
+ne serait visible que dans le `.exec` de l'extension, jamais fusionné
+avec celui de l'agent.
+
+---
