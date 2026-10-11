@@ -1086,8 +1086,13 @@ speech_bubble(s, Inches(0.95), Inches(4.25), Inches(7.6), Inches(1.0),
 textbox(s, Inches(0.95), Inches(6.6), Inches(8.3), Inches(0.5),
         "https://github.com/sidevconcept/couverture-junit-cucumber-jacoco  —  sidev.concept06@gmail.com", 11.5, MUTED_D)
 
-textbox(s, Inches(9.9), Inches(2.15), Inches(2.1), Inches(0.35), "Scanne-moi", 13, MARKER, bold=True, align=PP_ALIGN.CENTER)
-picture(s, f"{SCREENSHOTS}/qr-github.png", Inches(9.7), Inches(2.55), Inches(2.5), frame_color=PAPER, pad_in=0.08)
+textbox(s, Inches(9.45), Inches(2.15), Inches(3.5), Inches(0.35), "Scanne-moi", 13, MARKER, bold=True, align=PP_ALIGN.CENTER)
+qr_w = Inches(1.45)
+qr1_left, qr2_left = Inches(9.53), Inches(11.42)
+picture(s, f"{SCREENSHOTS}/qr-github.png", qr1_left, Inches(2.55), qr_w, frame_color=PAPER, pad_in=0.08)
+picture(s, f"{SCREENSHOTS}/qr-linkedin.png", qr2_left, Inches(2.55), qr_w, frame_color=PAPER, pad_in=0.08)
+textbox(s, Inches(9.45), Inches(4.2), Inches(1.61), Inches(0.3), "GitHub", 10.5, MUTED_D, align=PP_ALIGN.CENTER)
+textbox(s, Inches(11.34), Inches(4.2), Inches(1.61), Inches(0.3), "LinkedIn", 10.5, MUTED_D, align=PP_ALIGN.CENTER)
 skip_footer()
 add_transition(s, kind="fade")
 

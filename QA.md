@@ -1,4 +1,4 @@
-# Q&A de préparation — « La couverture de code, sans blabla »
+# Q&A de préparation — « La couverture de code, n'est jamais à 100% »
 
 Questions/réponses anticipées pour le Q&A de fin de conférence (10-15 min
 prévues, voir `SCRIPT.md`). Rédigé au fil de l'eau pendant la préparation.
