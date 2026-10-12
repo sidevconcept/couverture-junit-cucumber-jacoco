@@ -115,6 +115,53 @@ le révéler.
 
 ---
 
+## Comment peut-on avoir 100 % de couverture sans que tous les cas soient couverts ?
+
+Parce que la couverture mesure **si une ligne (ou une branche) a été
+exécutée**, pas **si le comportement a été vérifié pour tous les cas
+possibles**. Trois pièges expliquent l'écart.
+
+**1. Pas d'assertion = ligne « verte » mais rien n'est vérifié.** Un test
+qui appelle `isConflicting(a, b)` sans jamais faire `assertTrue`/
+`assertFalse` sur le résultat fait grimper la couverture à 100 % sur cette
+méthode, même si le résultat retourné est faux. Jacoco voit « la ligne
+21 s'est exécutée », pas « le résultat était correct ».
+
+**2. Un seul chemin peut suffire à « couvrir » une ligne entière.**
+Reprenons `ConflictDetector.isConflicting` (voir aussi la question sur
+lignes vs branches) :
+
+```java
+if (a.id() != null && a.id().equals(b.id())) {
+    return false;
+}
+return a.start().isBefore(b.end()) && b.start().isBefore(a.end());
+```
+
+Un seul test avec deux événements qui se chevauchent franchement (id
+différents) suffit à exécuter *toutes les lignes* : 100 % en **couverture
+de lignes**. Mais ça ne teste jamais :
+- le cas `id` identiques (le `return false` anticipé),
+- le cas limite où les deux événements se *touchent exactement* — la
+  règle métier dit explicitement que ça ne doit PAS être un conflit, et
+  c'est justement la ligne la plus piégeuse du fichier,
+- le cas où un seul des deux `isBefore` est vrai.
+
+**3. Branch coverage ≠ toutes les combinaisons.** Même en passant en
+**couverture de branches** (qui exige que le `if` soit pris vrai *et* faux
+au moins une fois), un `&&` avec deux conditions peut être « 100 %
+couvert » sans que chaque combinaison (vrai/faux, faux/vrai, faux/faux)
+ait été testée individuellement — c'est la couverture MC/DC, que Jacoco ne
+mesure pas.
+
+**Pour la conf** : 100 % de couverture est une garantie minimale (« rien
+n'est mort dans le code »), jamais une garantie de correction. C'est
+exactement la distinction développée dans la question suivante
+(coverage vs testing), et la raison pour laquelle on ne vise jamais le
+100 % comme objectif en soi (voir la première question de ce document).
+
+---
+
 ## Quelle est la différence entre coverage et testing ?
 
 C'est LE point central de toute la conférence, résumé dans le premier
